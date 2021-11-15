@@ -1,9 +1,7 @@
 FaceCompare/opencv
 
 # NetBeans specific #
-**/nbproject/private/
-**/nbproject/Makefile-*.mk
-**/nbproject/Package-*.bash
+FaceCompare/nbproject/
 build/
 nbbuild/
 dist/

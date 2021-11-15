@@ -28,7 +28,7 @@ public class PersonDAO {
                 Person person = new Person();
 
 //                tacgia.setId((ConnectData.rs.getString(1)));
-                person.setId((ConnectData.rs.getString(1)));
+                person.setId((ConnectData.rs.getInt(1)));
                 person.setHoten((ConnectData.rs.getString(2)));
                 person.setNamsinh((ConnectData.rs.getInt(3)));
                 listPerson.add(person);
@@ -46,10 +46,11 @@ public class PersonDAO {
         MySQLConnect connect = new MySQLConnect();
         try {
             String qry = "insert into person value(";
-            qry += Integer.parseInt(person.getId()) + ",'";
+            qry += person.getId() + ",'";
             qry += person.getHoten() + "',";
             qry += person.getNamsinh() + ")";
-
+            
+            //System.out.println(qry); //test thử câu query viết đúng chưa
             connect.st = connect.conn.createStatement();
             connect.st.executeUpdate(qry);
             System.out.println(qry);

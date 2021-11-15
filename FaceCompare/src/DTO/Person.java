@@ -10,7 +10,8 @@ package DTO;
  * @author user
  */
 public class Person {
-    private String id, hoten;
+    private int id;
+    private String hoten;
     private int namsinh;
     
     public Person()
@@ -18,18 +19,18 @@ public class Person {
         
     }
     
-    public Person(String id, String hoten, int namsinh)
+    public Person(int id, String hoten, int namsinh)
     {
         this.id = id;
         this.hoten = hoten;
         this.namsinh = namsinh;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 

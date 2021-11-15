@@ -27,11 +27,11 @@ public class Main {
     
     public static void compareAllPhoto(File input)
     {
-        //MẢNG ĐỐI TƯỢNG PHOTO - chứa tất cả các hình lưu từ CSDL  
+        //MẢNG PERSON - chứa tất cả các person 
         ArrayList<Person> listPerson = new ArrayList<Person>();          
         listPerson = PersonDAO.loadPerson();
         
-        //MẢNG ĐỐI TƯỢNG PHOTO - chứa tất cả các hình lưu từ CSDL  
+        //MẢNG PHOTO - chứa tất cả các hình lưu từ CSDL  
         ArrayList<Photo> listPhoto = new ArrayList<Photo>();        
         listPhoto = PhotoDAO.loadPhoto();        
 
@@ -40,7 +40,7 @@ public class Main {
           
         double max = 0; // Kết quả khớp nhất
         double confidence = 0; // kết quả so sánh 2 ảnh
-        Photo matchPhoto = null; // Hình ảnh giống nhất
+        Photo matchPhoto = new Photo(); // Hình ảnh giống nhất
         
         FaceCompare fc = new FaceCompare();
         long startTime = System.currentTimeMillis();
@@ -59,7 +59,7 @@ public class Main {
         long duration = System.currentTimeMillis()-startTime;
         
         System.out.println("Thoi gian cho doi: "+ duration);
-        if(max > 60) // max tren 60% thì trả về kết quả
+        if(max > 70) // max tren 70% thì trả về kết quả
         {
             
             Person personMatch = new Person();

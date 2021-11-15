@@ -10,36 +10,34 @@ package DTO;
  * @author user
  */
 public class Photo {
-    private String id;
-    private String id_person;
+    private int id;
+    private int id_person;
     private String path;
-    
+
     public Photo()
     {
-        this.id = null;
-        this.id_person = null;
-        this.path = null;
+        
     }
-    public Photo(String id, String id_person, String path)
+    public Photo(int id, int id_person, String path)
     {
         this.id = id;
         this.id_person = id_person;
         this.path = path;
     }
-
-    public String getId() {
+    
+     public int getId() {
         return id;
     }
-
-    public void setId(String id) {
+    
+    public void setId(int id) {
         this.id = id;
     }
-    
-    public String getId_person() {
+
+    public int getId_person() {
         return id_person;
     }
 
-    public void setId_person(String id_person) {
+    public void setId_person(int id_person) {
         this.id_person = id_person;
     }
 
@@ -49,7 +47,5 @@ public class Photo {
 
     public void setPath(String path) {
         this.path = path;
-    }
-    
-    
+    } 
 }

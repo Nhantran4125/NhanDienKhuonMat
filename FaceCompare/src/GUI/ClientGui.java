@@ -281,6 +281,7 @@ public class ClientGui extends JFrame {
                 } else {
                     // Gọi hàm Send
                     // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
+                   
                     Send(clientFileInput, 1);
                 }
 
@@ -513,6 +514,7 @@ public class ClientGui extends JFrame {
     }
 
     public void Send(File file, int type) {
+
         //khởi tạo đối tượng request
         Request request = new Request();
         // gán data là file sau khi mã hóa
@@ -538,10 +540,15 @@ public class ClientGui extends JFrame {
                 Person person = (Person) getObject(DescryptData(response.getData()));
                 Photo photo = (Photo) getObject(DescryptData(response.getPhoto()));
                 lbPicFromServer.setIcon(new ImageIcon(photo.getPath()));
+                lbPicFromServer.setText("");
+                lbPercent.setBounds(150, 430, 250, 50);
                 lbPercent.setText(String.valueOf(response.getMessage()) + "%/ 100%");
                 txtName.setText(person.getHoten());
                 txtYOB.setText(String.valueOf(person.getNamsinh()));
             } else {
+                lbPercent.setBounds(150, 430, 120, 50);
+                lbPicFromServer.setIcon(null);
+                lbPicFromServer.setText("Picture server sends...");
                 JOptionPane.showMessageDialog(this, response.getMessage());
             }
         } catch (IOException | ClassNotFoundException ex) {
@@ -551,15 +558,15 @@ public class ClientGui extends JFrame {
     }
 
     public void UploadImage() {
-        JFileChooser fileChooser = new JFileChooser();
+        JFileChooser fileChooser = new JFileChooser("src/photo");
         fileChooser.showSaveDialog(this);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
         clientFileInput = fileChooser.getSelectedFile();
         if (clientFileInput != null) {
             ImageIcon image = new ImageIcon(clientFileInput.getPath());
             lbPic.setIcon(image);
+            lbPic.setText("");
         }
-
     }
 
     public void ConnectToServer(String address, int port) {

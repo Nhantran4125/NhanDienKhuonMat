@@ -98,6 +98,7 @@ public class Server {
         Server server1 = new Server(5000);
     }
 
+        
     private void ComparePhoto(byte[] data, byte[] key) {
         try {
             byte[] originalKey = DescryptKey(key);

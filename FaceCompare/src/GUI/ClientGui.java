@@ -65,7 +65,6 @@ public class ClientGui extends JFrame {
     BufferedWriter out = null;
     BufferedReader in = null;
 
-    SecretKey key = AES.generateKey();
     //================ Public Key
     PublicKey publicKey;
     ObjectInputStream inputStream = null; //Objekt vom Client
@@ -74,6 +73,7 @@ public class ClientGui extends JFrame {
     int type;
     Response response = null;
     String url = "src/encryption/";
+    SecretKey key = AES.generateKey();
 
     public ClientGui() {
         // tạo thể hiện của JFrame
@@ -251,40 +251,29 @@ public class ClientGui extends JFrame {
         btnAdd.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnAdd.setBounds(150, 580, 100, 50);
         pnright1.add(btnAdd);
-        btnAdd.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                OpenCamera();
-            }
+        btnAdd.addActionListener((ActionEvent e) -> {
+            OpenCamera();
         });
 
         btnLoad = new JButton("UPLOAD");
         btnLoad.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnLoad.setBounds(270, 580, 100, 50);
-        btnLoad.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-//                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                UploadImage();
-            }
+        btnLoad.addActionListener((ActionEvent e) -> {
+            // Hàm chọn file từ file Chooser và cập nhật hình ảnh
+            UploadImage();
         });
         pnright1.add(btnLoad);
 
         btnSend = new JButton("SEND");
         btnSend.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnSend.setBounds(470, 310, 100, 50);
-        btnSend.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (clientFileInput == null) {
-                    JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
-                } else {
-                    // Gọi hàm Send
-                    // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
-                   
-                    Send(clientFileInput, 1);
-                }
-
+        btnSend.addActionListener((ActionEvent e) -> {
+            if (clientFileInput == null) {
+                JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+            } else {
+                // Gọi hàm Send
+                // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
+                Send(clientFileInput, 1);
             }
         });
         pnright1.add(btnSend);
@@ -526,7 +515,8 @@ public class ClientGui extends JFrame {
         // dùng cái thằng outputStream để gửi cái request đi
         try {
             outputStream = new ObjectOutputStream(socket.getOutputStream());
-            outputStream.writeObject(request);
+            byte[] cypherText = this.EncryptData(clientFileInput);
+            outputStream.writeObject(cypherText);
             outputStream.flush();
         } catch (IOException ex) {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
@@ -561,17 +551,29 @@ public class ClientGui extends JFrame {
         JFileChooser fileChooser = new JFileChooser("src/photo");
         fileChooser.showSaveDialog(this);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
-        clientFileInput = fileChooser.getSelectedFile();
+        if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
+            clientFileInput = fileChooser.getSelectedFile();
+        }
         if (clientFileInput != null) {
-            ImageIcon image = new ImageIcon(clientFileInput.getPath());
-            lbPic.setIcon(image);
-            lbPic.setText("");
+            if (fileChooser.getSelectedFile() != null) {
+                clientFileInput = fileChooser.getSelectedFile();
+                ImageIcon image = new ImageIcon(clientFileInput.getPath());
+                lbPic.setIcon(image);
+                lbPic.setText("");
+                lbPicFromServer.setIcon(null);
+            }
         }
     }
 
     public void ConnectToServer(String address, int port) {
         try {
             socket = new Socket(address, port);
+            System.out.println(key);
+
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            outputStream.writeObject(EncryptKey(key));
+            outputStream.flush();
+           
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, ex);
         }

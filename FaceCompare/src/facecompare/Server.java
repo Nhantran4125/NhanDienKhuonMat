@@ -58,6 +58,7 @@ public class Server {
     ObjectInputStream inputStream = null;
     public String line = "";
     ObjectOutput outputStream;
+    private SecretKey key ;
 
     public Server(int port) {
         try {
@@ -67,14 +68,25 @@ public class Server {
                     System.out.println("Server start");
                     socket = server.accept();
                     System.out.println("Connected");
-                    Request request = null;
-                    while (true) {
+                   
+                   
+                    if (key == null) {
                         inputStream = new ObjectInputStream(socket.getInputStream());
-                        request = (Request) inputStream.readObject();
-                        if (request.getType() == 1) {
-                            ComparePhoto(request.getData(), request.getKey());
+                         byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
+                        key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
+                       
+                        System.out.println(key);
+                    } 
+                        while (true) {
+                           inputStream = new ObjectInputStream(socket.getInputStream());
+                            byte[] cypher = (byte[]) inputStream.readObject();
+//                            if (request.getType() == 1) {
+//                                System.out.println("Hello");
+//                                ComparePhoto(request.getData(), request.getKey());
+//                            }
+                            ComparePhoto(cypher);
                         }
-                    }
+                    
                 } catch (Exception ex) {
                     System.out.println("Client : " + socket.getInetAddress() + " is disconnected " + ex);
                 }
@@ -98,20 +110,19 @@ public class Server {
         Server server1 = new Server(5000);
     }
 
-        
-    private void ComparePhoto(byte[] data, byte[] key) {
+    private void ComparePhoto(byte[] data) {
         try {
-            byte[] originalKey = DescryptKey(key);
-            byte[] originalData = DescryptData(data, originalKey);
+          
+            byte[] originalData = DescryptData(data);
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(originalData));
             File outputfile = new File("src/photo/temp.jpg");
             ImageIO.write(image, "jpg", outputfile);
             //MẢNG PERSON - chứa tất cả các person 
-            ArrayList<Person> listPerson = new ArrayList<Person>();
+            ArrayList<Person> listPerson = new ArrayList<>();
             listPerson = PersonDAO.loadPerson();
 
             //MẢNG PHOTO - chứa tất cả các hình lưu từ CSDL  
-            ArrayList<Photo> listPhoto = new ArrayList<Photo>();
+            ArrayList<Photo> listPhoto = new ArrayList<>();
             listPhoto = PhotoDAO.loadPhoto();
             //hình client gửi để so khớp
             //File input = new File("src/photo/test.jpg").getAbsoluteFile();
@@ -147,12 +158,13 @@ public class Server {
                         personMatch = person;
                     }
                 }
-                SecretKey secretKey = new SecretKeySpec(originalKey, 0, originalKey.length, "AES");
+             
                 Response response = new Response();
-                response.setData(EncryptData(getBinary(personMatch), secretKey));
-                response.setPhoto(EncryptData(getBinary(matchPhoto), secretKey));
+                response.setData(EncryptData(getBinary(personMatch)));
+                response.setPhoto(EncryptData(getBinary(matchPhoto)));
                 response.setMessage(String.valueOf(max));
                 outputStream.writeObject(response);
+               
             } else {
                 Response response = new Response();
                 response.setMessage("Không tìm thấy người này");
@@ -163,10 +175,7 @@ public class Server {
         }
     }
 
-    private void ObjectDetection() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+  
     String url = "src/encryption/";
 
     public byte[] DescryptKey(byte[] key) {
@@ -179,33 +188,33 @@ public class Server {
         return null;
     }
 
-    public byte[] DescryptData(byte[] data, byte[] key) {
-        SecretKey originalKey = new SecretKeySpec(key, 0, key.length, "AES");
-        return AES.decrypt(originalKey, data);
+    public byte[] DescryptData(byte[] data) {
+    
+        return AES.decrypt(key, data);
     }
 
-    private static Object getObject(byte[] byteArr) {
-        ByteArrayInputStream in = new ByteArrayInputStream(byteArr);
-        ObjectInputStream is = null;
-        Object obj = null;
-        try {
-            is = new ObjectInputStream(in);
-            obj = is.readObject();
-
-        } catch (IOException | ClassNotFoundException ex) {
-            System.out.println(ex);
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-                in.close();
-            } catch (IOException ex) {
-                System.out.println(ex);
-            }
-        }
-        return obj;
-    }
+//    private static Object getObject(byte[] byteArr) {
+//        ByteArrayInputStream in = new ByteArrayInputStream(byteArr);
+//        ObjectInputStream is = null;
+//        Object obj = null;
+//        try {
+//            is = new ObjectInputStream(in);
+//            obj = is.readObject();
+//
+//        } catch (IOException | ClassNotFoundException ex) {
+//            System.out.println(ex);
+//        } finally {
+//            try {
+//                if (is != null) {
+//                    is.close();
+//                }
+//                in.close();
+//            } catch (IOException ex) {
+//                System.out.println(ex);
+//            }
+//        }
+//        return obj;
+//    }
 
     private static byte[] getBinary(Object obj) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -230,9 +239,9 @@ public class Server {
         return array;
     }
 
-    public byte[] EncryptData(byte[] data, SecretKey secretKey) {
+    public byte[] EncryptData(byte[] data) {
         try {
-            return AES.encrypt(secretKey, data);
+            return AES.encrypt(key, data);
         } catch (Exception ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }

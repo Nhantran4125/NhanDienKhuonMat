@@ -4,16 +4,29 @@
  */
 package DTO;
 
+import java.io.File;
 import java.io.Serializable;
 
 /**
  *
  * @author DELL
  */
-public class  Request implements Serializable {
+public class Request implements Serializable {
+
     int type;
-    byte[] data;
-    byte[] key;
+    Person person;
+    File file;
+
+    public Request(int type, File file) {
+        this.type = type;
+        this.file = file;
+    }
+
+    public Request(int type, Person person, File file) {
+        this.type = type;
+        this.person = person;
+        this.file = file;
+    }
 
     public int getType() {
         return type;
@@ -23,19 +36,22 @@ public class  Request implements Serializable {
         this.type = type;
     }
 
-    public byte[] getData() {
-        return data;
+    public Person getPerson() {
+        return person;
     }
 
-    public void setData(byte[] data) {
-        this.data = data;
+    public void setPerson(Person person) {
+        this.person = person;
     }
 
-    public byte[] getKey() {
-        return key;
+    public File getFile() {
+        return file;
     }
 
-    public void setKey(byte[] key) {
-        this.key = key;
+    public void setFile(File file) {
+        this.file = file;
     }
+
+    
+
 }

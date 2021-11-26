@@ -12,6 +12,7 @@ import DTO.Person;
 import DTO.Photo;
 import DTO.Request;
 import DTO.Response;
+import GUI.ClientGui;
 import encryption.AES;
 import encryption.RSA;
 import java.awt.image.BufferedImage;
@@ -23,6 +24,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
@@ -39,7 +41,9 @@ import java.util.logging.Logger;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -58,7 +62,7 @@ public class Server {
     ObjectInputStream inputStream = null;
     public String line = "";
     ObjectOutput outputStream;
-    private SecretKey key;
+    private SecretKey key = null;
 
     public Server(int port) {
         try {
@@ -67,20 +71,33 @@ public class Server {
                 try {
                     System.out.println("Server start");
                     socket = server.accept();
-                    if (socket.isConnected()) {
-                        System.out.println("Client : " + socket.getInetAddress() + " connected ");
-                        if (key == null) {
-                            inputStream = new ObjectInputStream(socket.getInputStream());
-                            byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
-                            System.out.println(arrayKey);
-                            key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
-                            System.out.println(key);
+                    System.out.println("Client : " + socket.getInetAddress() + " connected ");
+
+                    if (key == null) {
+                        inputStream = new ObjectInputStream(socket.getInputStream());
+                        byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
+                        System.out.println(arrayKey.length);
+                        key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
+
+                    }
+                    while (true) {
+                        inputStream = new ObjectInputStream(socket.getInputStream());
+                        byte[] cypher = (byte[]) inputStream.readObject();
+                        Request request = (Request) getObject(this.DescryptData(cypher));
+                        int type = request.getType();
+                        if (type == 1) {
+                            File file = request.getFile();
+                            ComparePhoto(file);
                         }
-                        while (true) {
-                            inputStream = new ObjectInputStream(socket.getInputStream());
-                            byte[] cypher = (byte[]) inputStream.readObject();
-                            ComparePhoto(cypher);
+                        
+                        
+                        if(type==2)
+                        {
+                            File file = request.getFile();
+                            Person ps= request.getPerson();
+                            addPhoto(file, ps);
                         }
+                        
                     }
 
                 } catch (Exception ex) {
@@ -99,13 +116,8 @@ public class Server {
         Server server1 = new Server(5000);
     }
 
-    private void ComparePhoto(byte[] data) {
+    private void ComparePhoto(File file) {
         try {
-
-            byte[] originalData = DescryptData(data);
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(originalData));
-            File outputfile = new File("src/photo/temp.jpg");
-            ImageIO.write(image, "jpg", outputfile);
             //MẢNG PERSON - chứa tất cả các person 
             ArrayList<Person> listPerson = new ArrayList<>();
             listPerson = PersonDAO.loadPerson();
@@ -126,7 +138,7 @@ public class Server {
             //lần lượt so sánh hình client gửi (input) với từng hình trong CSDL (fileCompare)
             for (Photo photo : listPhoto) {
                 File fileCompare = new File(photo.getPath()).getAbsoluteFile();
-                confidence = fc.compareFace(outputfile, fileCompare); // so khớp 2 hình -> kết quả giống nhau
+                confidence = fc.compareFace(file, fileCompare); // so khớp 2 hình -> kết quả giống nhau
                 if (confidence > max) // tìm được hình có độ giống nhau lớn hơn max  -> gán matchPhoto là p
                 {
                     max = confidence;
@@ -159,7 +171,7 @@ public class Server {
                 response.setMessage("Không tìm thấy người này");
                 outputStream.writeObject(response);
             }
-            outputfile.delete();
+            
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -167,17 +179,18 @@ public class Server {
 
     String url = "src/encryption/";
 
-    public byte[] DescryptKey(byte[] key) {
+    private byte[] DescryptKey(byte[] key) {
+        PrivateKey privateKey = null;
         try {
-            PrivateKey privateKey = RSA.getPrivateKey(url + "PrivateKey.txt");
-            return RSA.decrypt(privateKey, key);
+            privateKey = RSA.getPrivateKey(url + "PrivateKey.txt");
+
         } catch (Exception ex) {
-            System.out.println(ex);
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;
+        return RSA.decrypt(privateKey, key);
     }
 
-    public byte[] DescryptData(byte[] data) {
+    public final byte[] DescryptData(byte[] data) {
 
         return AES.decrypt(key, data);
     }
@@ -205,26 +218,27 @@ public class Server {
 //        return obj;
 //    }
     private static byte[] getBinary(Object obj) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        byte[] array = null;
-        try {
-            out = new ObjectOutputStream(bos);
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bos)) {
             out.writeObject(obj);
-            array = bos.toByteArray();
+            return bos.toByteArray();
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-                bos.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
-        return array;
+       return null;
+    }
+
+    //chuyển object từ byte[]
+    private static Object getObject(byte[] byteArr) {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(byteArr);
+                ObjectInputStream in = new ObjectInputStream(bis)) {
+            return in.readObject();
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     public byte[] EncryptData(byte[] data) {
@@ -235,4 +249,87 @@ public class Server {
         }
         return null;
     }
+    
+    private void addPhoto(File file, Person ps) {
+      try {
+
+            ArrayList<Person> listPerson = new ArrayList<>();
+            listPerson = PersonDAO.loadPerson();
+            
+            //data send to Client
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+           
+           //File directory = new File(file.getPath()).getAbsoluteFile();
+           // hiện tại là ảnh cần thêm phải có sẵn trong folder photo thì sau  khi thêm ảnh mới so sánh được
+           File directory = new File(file.getPath());
+           File dic= new File(directory.getName());
+           String path= "src/photo/" + dic.getPath();
+            //String path = directory.getAbsolutePath();
+            
+            int count=0;
+            for(Person x : listPerson){
+                if(x.getHoten().equals(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh() )
+                {
+                    // neu thong tin nguoi da ton tai -> them hinh
+                    Photo pt1=new Photo();
+                    pt1.setId_person(x.getId());
+                    pt1.setPath(path);
+                    
+                    PhotoDAO pt= new PhotoDAO();
+                    pt.add(pt1);
+                    
+                    Response response = new Response();
+                    response.setMessage("Thêm hình thành công");
+                    outputStream.writeObject(response);
+                    System.out.println(response);
+                    
+                }
+                else{
+                    count++;
+                }
+                }
+            
+            // neu thong tin nguoi chua ton tai -> them nguoi, them anh
+            if(count==listPerson.size()){
+                    //them nguoi
+                    PersonDAO psAdd= new PersonDAO();
+                    psAdd.add(ps);
+                    
+                    
+                    //them anh cua nguoi do
+                 
+                   listPerson = PersonDAO.loadPerson();
+                    for(Person x : listPerson){
+                        if(x.getHoten().equals(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh() )
+                        {
+                            // neu thong tin nguoi da ton tai -> them hinh
+                            Photo pt1=new Photo();
+                            pt1.setId_person(x.getId());
+                            pt1.setPath(path);
+
+                            PhotoDAO pt= new PhotoDAO();
+                            pt.add(pt1);
+
+                            Response response = new Response();
+                            response.setMessage("Thêm hình thành công");
+                            outputStream.writeObject(response);
+                            System.out.println(response);
+                            break;
+
+                        }
+                    }
+                   
+               
+                    Response response = new Response();
+                    response.setMessage("Thêm người + hình ảnh thành công");
+                    outputStream.writeObject(response);
+                    System.out.println(response);
+                }
+                
+            } catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            }
+    
 }

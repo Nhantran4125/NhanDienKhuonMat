@@ -6,6 +6,7 @@ import DTO.Request;
 import DTO.Response;
 import encryption.AES;
 import encryption.RSA;
+import facecompare.Server;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -16,10 +17,12 @@ import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -80,7 +83,7 @@ public class ClientGui extends JFrame {
     int type;
     Response response = null;
     String url = "src/encryption/";
-    
+
     public ClientGui() {
         // tạo thể hiện của JFrame
         f = new JFrame();
@@ -257,7 +260,7 @@ public class ClientGui extends JFrame {
         btnAdd.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                OpenCamera();                            
+                OpenCamera();
             }
         });
 
@@ -267,7 +270,8 @@ public class ClientGui extends JFrame {
         btnLoad.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            UploadImage();
+                UploadImage();
+
             }
         });
         pnright1.add(btnLoad);
@@ -278,21 +282,20 @@ public class ClientGui extends JFrame {
         btnSend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-               //==== SEND HÌNH UP TỪ MÁY HOẶC CHỤP TỪ WEBCAM
+                //==== SEND HÌNH UP TỪ MÁY HOẶC CHỤP TỪ WEBCAM
                 if (lbPic.getText() == null) //text trên lbPic là null khi upload hình
                 {
                     if (clientFileInput == null) {
                         JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
                     } else {
-                    // Gọi hàm Send
+                        // Gọi hàm Send
                         // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
                         Send(clientFileInput, 1);
                     }
-                } 
-                else // text trên lbPic là đường dẫn file hình mới chụp
+                } else // text trên lbPic là đường dẫn file hình mới chụp
                 {
                     File captureFile = new File(lbPic.getText());
-                    clientFileInput = captureFile; 
+                    clientFileInput = captureFile;
                     //JOptionPane.showMessageDialog(pnmenu, clientFileInput.getAbsolutePath());
                     Send(clientFileInput, 1);
                 }
@@ -389,20 +392,41 @@ public class ClientGui extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) 
             {
-                if (clientFileInput == null) 
-                {
-                        JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
-                } 
-                else 
-                {
-                    if(txtNameAdd.getText().equals("") || txtYOBAdd.getText().equals(""))
-                        JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
-                    else
-                        {
-                            // gui thong tin cho server xu ly
-                            JOptionPane.showMessageDialog(null, "Done");
-                        }
+                if (lbPic.getText() == null){
+                        if (clientFileInput == null) 
+                    {
+                            JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+                    } 
+                    else 
+                    {
+                        if(txtNameAdd.getText().equals("") || txtYOBAdd.getText().equals(""))
+                            JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
+                        else
+                            {
+                                // gui thong tin cho server xu ly
+                                Person ps= new Person();                            
+                                ps.setHoten(txtNameAdd.getText());
+                                ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+
+                                Add(ps,clientFileInput,2);
+                            }
+                    }
                 }
+                else // text trên lbPic là đường dẫn file hình mới chụp
+                {
+                    File captureFile = new File(lbPic.getText());
+                    clientFileInput = captureFile;
+                    //JOptionPane.showMessageDialog(pnmenu, clientFileInput.getAbsolutePath());
+                     Person ps= new Person();                            
+                     ps.setHoten(txtNameAdd.getText());
+                     ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+                    Add(ps,clientFileInput,2);
+                }
+                
+                
+                
+                
+                
             }
             
         });
@@ -537,21 +561,23 @@ public class ClientGui extends JFrame {
     }
 
     public void Send(File file, int type) {
+        Request request = null;
+        if (type == 1) {
+            request = new Request(type, clientFileInput);
 
-        //khởi tạo đối tượng request
-        Request request = new Request();
-        // gán data là file sau khi mã hóa
-        request.setData(this.EncryptData(clientFileInput));
-        // gán key là key sau khi mã hóa bằng RSA
-        request.setKey(this.EncryptKey(key));
-        // đây là cái kiểu phải làm gì
-        request.setType(type);
+        } else if (type == 2) {
+            Person person = new Person();
+            request = new Request(type, person, clientFileInput);
+
+        }
+
         // dùng cái thằng outputStream để gửi cái request đi
         try {
             outputStream = new ObjectOutputStream(socket.getOutputStream());
-            byte[] cypherText = this.EncryptData(clientFileInput);
+            byte[] cypherText = this.EncryptData(request);
             outputStream.writeObject(cypherText);
             outputStream.flush();
+
         } catch (IOException ex) {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -574,6 +600,8 @@ public class ClientGui extends JFrame {
                 lbPicFromServer.setIcon(null);
                 lbPicFromServer.setText("Picture server sends...");
                 JOptionPane.showMessageDialog(this, response.getMessage());
+                txtName.setText("");
+                txtYOB.setText("");
             }
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
@@ -588,11 +616,11 @@ public class ClientGui extends JFrame {
         if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
             clientFileInput = fileChooser.getSelectedFile();
         }
-        if (clientFileInput != null) {            
+        if (clientFileInput != null) {
             if (fileChooser.getSelectedFile() != null) {
                 clientFileInput = fileChooser.getSelectedFile();
                 ImageIcon image = new ImageIcon(clientFileInput.getPath());
-                lbPic.setIcon(image);                
+                lbPic.setIcon(image);
                 lbPic.setText(null); //set null nha
                 lbPicFromServer.setIcon(null);
                 txtName.setText("");
@@ -610,7 +638,6 @@ public class ClientGui extends JFrame {
             outputStream = new ObjectOutputStream(socket.getOutputStream());
             outputStream.writeObject(EncryptKey(key));
             outputStream.flush();
-           
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, ex);
         }
@@ -626,13 +653,8 @@ public class ClientGui extends JFrame {
     }
 
     // mã hóa dữ liệu dùng khóa của mã hóa AES
-    public byte[] EncryptData(File file) {
-        try {
-            return AES.encrypt(key, Files.readAllBytes(file.toPath()));
-        } catch (IOException ex) {
-            Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
+    public byte[] EncryptData(Request request) {
+        return AES.encrypt(key, getBinary(request));
     }
 
     // giải mã dùng khóa của AES
@@ -640,27 +662,28 @@ public class ClientGui extends JFrame {
         return AES.decrypt(key, data);
     }
 
+      private static byte[] getBinary(Object obj) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(obj);
+            return bos.toByteArray();
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       return null;
+    }
+
     //chuyển object từ byte[]
     private static Object getObject(byte[] byteArr) {
-        ByteArrayInputStream in = new ByteArrayInputStream(byteArr);
-        ObjectInputStream is = null;
-        Object obj = null;
-        try {
-            is = new ObjectInputStream(in);
-            obj = is.readObject();
-        } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-                in.close();
-            } catch (IOException ex) {
-                Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(byteArr);
+                ObjectInputStream in = new ObjectInputStream(bis)) {
+            return in.readObject();
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return obj;
+        return null;
     }
 
     //mã hóa khóa AES bằng RSA
@@ -680,5 +703,34 @@ public class ClientGui extends JFrame {
         ClientGui c = new ClientGui();
         c.ConnectToServer("localhost", 5000);
         c.show();
+    }
+    
+    public void Add(Person person,File file, int type) {
+         Request request = null;
+         request = new Request(type, person, clientFileInput);
+         
+         //send to server
+         try {
+             
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            byte[] cypherText = this.EncryptData(request);
+            outputStream.writeObject(cypherText);
+            outputStream.flush();
+
+        } catch (IOException ex) {
+            Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        // read from server
+        try {
+            inputStream = new ObjectInputStream(socket.getInputStream());
+            response = (Response) inputStream.readObject();
+            JOptionPane.showMessageDialog(this, response.getMessage());
+
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            
+        
     }
 }

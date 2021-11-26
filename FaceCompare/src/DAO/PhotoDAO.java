@@ -8,6 +8,8 @@ package DAO;
 import DTO.Photo;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -26,8 +28,7 @@ public class PhotoDAO {
 
             while (ConnectData.rs.next()) {
                 Photo photo = new Photo();
-
-//                tacgia.setId((ConnectData.rs.getString(1)));                
+             
                 photo.setId((ConnectData.rs.getInt(1)));
                 photo.setId_person((ConnectData.rs.getInt(2)));
                 photo.setPath((ConnectData.rs.getString(3)));
@@ -43,10 +44,14 @@ public class PhotoDAO {
     
 
     public void add(Photo photo) {
+        
         MySQLConnect connect = new MySQLConnect();
         try {
+            int count=0;
+            count= increaseId()+1;
+            
             String qry = "insert into photo value(";
-            qry += photo.getId() + ",";
+            qry += count + ",";
             qry += photo.getId_person() + ",'";
             qry += photo.getPath() + "')";
 
@@ -57,6 +62,27 @@ public class PhotoDAO {
         } catch (SQLException ex) {
             System.out.println(ex.toString());
         }
+    }
+    
+    public int increaseId()
+    {
+        
+         try {
+             int count=0;
+             MySQLConnect connect = new MySQLConnect();
+             String qry="select count(id) from photo";
+             connect.st = connect.conn.createStatement();
+             connect.rs = connect.st.executeQuery(qry);
+             while(connect.rs.next())
+             {
+                 count = connect.rs.getInt(1);
+             }
+             return count;              
+         } catch (SQLException ex) {
+             Logger.getLogger(PersonDAO.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         return 0;
+        
     }
 
 }

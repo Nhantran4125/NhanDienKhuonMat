@@ -74,7 +74,6 @@ public class Server {
                             byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
                             System.out.println(arrayKey);
                             key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
-
                             System.out.println(key);
                         }
                         while (true) {

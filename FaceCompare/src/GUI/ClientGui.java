@@ -218,9 +218,6 @@ public class ClientGui extends JFrame {
                 lbAdd.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                 lbAdd.setForeground(null);
                 lbAdd.setBackground(null);
-
-//                txtNameAdd.setVisible(false);
-//                txtYOBAdd.setVisible(false);
                 pnAdd.setVisible(false);
 
             }
@@ -270,7 +267,6 @@ public class ClientGui extends JFrame {
         btnLoad.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             UploadImage();
             }
         });
@@ -349,11 +345,13 @@ public class ClientGui extends JFrame {
 
         txtName = new JTextField();
         txtName.setBounds(120, 40, 200, 50);
+        txtName.setFont(new Font("Segoe UI", Font.PLAIN, 20));
         txtName.setEditable(false);
         pnInfo.add(txtName);
 
         txtYOB = new JTextField();
         txtYOB.setBounds(120, 100, 200, 50);
+        txtYOB.setFont(new Font("Segoe UI", Font.PLAIN, 20));
         txtYOB.setEditable(false);
 
         lbYOB = new JLabel("YOB: ", JLabel.CENTER);
@@ -371,9 +369,6 @@ public class ClientGui extends JFrame {
         lbAdd.setFont(new Font("Segoe UI", Font.BOLD, 25));
         lbAdd.setBounds(300, 10, 200, 70);
         lbAdd.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-//        lbAdd.setForeground(Color.WHITE);
-//        lbAdd.setBackground(color_background);
-        //lbPerson.setBackground(Color.yellow);
         lbAdd.setOpaque(true);
 
         pnright1.add(lbAdd);
@@ -381,7 +376,6 @@ public class ClientGui extends JFrame {
         //noi nhap thong tin nguoi trong anh
         pnAdd = new JPanel();
         pnAdd.setBounds(590, 140, 800, 500);
-        //pnAdd.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         pnAdd.setLayout(null);
         pnAdd.setVisible(false);
 
@@ -391,6 +385,27 @@ public class ClientGui extends JFrame {
         btnSend2.setBounds(430, 220, 100, 50);
         btnSend2.setFont(new Font("Segoe UI", Font.BOLD, 13));
         pnAdd.add(btnSend2);
+        btnSend2. addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                if (clientFileInput == null) 
+                {
+                        JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+                } 
+                else 
+                {
+                    if(txtNameAdd.getText().equals("") || txtYOBAdd.getText().equals(""))
+                        JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
+                    else
+                        {
+                            // gui thong tin cho server xu ly
+                            JOptionPane.showMessageDialog(null, "Done");
+                        }
+                }
+            }
+            
+        });
 
         lbNameAdd = new JLabel("Name: ", JLabel.CENTER);
         lbNameAdd.setFont(new Font("Segoe UI", Font.BOLD, 20));
@@ -462,10 +477,7 @@ public class ClientGui extends JFrame {
         lbPicOj.setBackground(Color.WHITE);
         lbPicOj.setOpaque(true);
         pnright2.add(lbPicOj);
-//        btnAddOj= new JButton("CAPTURE");
-//        btnAddOj.setFont(new Font("Segoe UI", Font.BOLD, 13));
-//        btnAddOj.setBounds(150, 580, 100, 50);
-//        pnright2.add(btnAddOj);
+
         btnLoadOj = new JButton("UPLOAD");
         btnLoadOj.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnLoadOj.setBounds(200, 650, 100, 50);
@@ -489,33 +501,11 @@ public class ClientGui extends JFrame {
         pnResultOj.setLayout(null);
         pnright2.add(pnResultOj);
 
-//        lbPicFromServerOj= new JLabel("Server sends...", JLabel.CENTER);
-//        lbPicFromServerOj.setFont(new Font("Segoe UI", Font.BOLD, 25));
-//        lbPicFromServerOj.setBounds(10, 15, 400, 400);
-//        lbPicFromServerOj.setBackground(Color.WHITE);
-//        lbPicFromServerOj.setOpaque(true);
-//        pnResultOj.add(lbPicFromServerOj);
-//        
-//        lbPercentOj= new JLabel("__%/100%", JLabel.CENTER);
-//        lbPercentOj.setFont(new Font("Segoe UI", Font.BOLD, 20));
-//        lbPercentOj.setBounds(150, 420, 100, 50);
-//        lbPercentOj.setBackground(Color.WHITE);
-//        lbPercentOj.setOpaque(true);
-//        pnResultOj.add(lbPercentOj);
-//        pnInfoOj = new JPanel();
-//        pnInfoOj.setBounds(420,15 , 350, 400);
-//        pnInfoOj.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-//        pnInfoOj.setLayout(null);
-//        pnResultOj.add(pnInfoOj);
         lbNameOj = new JLabel("List of things : ", JLabel.CENTER);
         lbNameOj.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lbNameOj.setBounds(0, 5, 200, 50);
         pnResultOj.add(lbNameOj);
-//        
-//        txtNameOj= new JTextField();
-//        txtNameOj.setBounds(10,70,200,50);
-//        txtNameOj.setEditable(false);
-//        pnInfoOj.add(txtNameOj);
+
 
         txpNamOj = new JTextPane();
         txpNamOj.setBounds(25, 70, 750, 400);

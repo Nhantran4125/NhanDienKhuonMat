@@ -7,6 +7,7 @@ import DTO.Response;
 import encryption.AES;
 import encryption.RSA;
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -37,6 +39,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.opencv.core.Core;
 
 /**
  *
@@ -47,7 +50,10 @@ public class ClientGui extends JFrame {
     //============== PERSON
     public JPanel panel1, pnmenu, pnright1, pnright2, pnResult, pnInfo, pnAdd;
     public JLabel label1, lbPerson, lbObject, lbCheck, lbAdd;
-    public JLabel lbTitlePic, lbInfo, lbPic, lbPicFromServer, lbPercent;
+    //public JLabel lbTitlePic, lbInfo, lbPic, lbPicFromServer, lbPercent;
+    public JLabel lbTitlePic, lbInfo, lbPicFromServer, lbPercent;
+    public static JLabel lbPic; //sửa thành kiểu static để gán hình chụp vào lbPic
+    public static String capturedPath;
     public JLabel lbName, lbYOB, lbNameAdd, lbYOBAdd;
     public JTextField txtName, txtYOB, txtNameAdd, txtYOBAdd;
     public JButton btn1, btnAdd, btnLoad, btnSend, btnSend2;
@@ -74,7 +80,7 @@ public class ClientGui extends JFrame {
     int type;
     Response response = null;
     String url = "src/encryption/";
-
+    
     public ClientGui() {
         // tạo thể hiện của JFrame
         f = new JFrame();
@@ -254,7 +260,7 @@ public class ClientGui extends JFrame {
         btnAdd.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                OpenCamera();
+                OpenCamera();                            
             }
         });
 
@@ -276,12 +282,30 @@ public class ClientGui extends JFrame {
         btnSend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (clientFileInput == null) {
-                    JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
-                } else {
+//                if (clientFileInput == null) {
+//                    JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+//                } else {
+//                    // Gọi hàm Send
+//                    // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
+//                   
+//                    Send(clientFileInput, 1);
+//                }
+
+                if (lbPic.getText() == null) //text trên lbPic là null khi upload hình
+                {
+                    if (clientFileInput == null) {
+                        JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+                    } else {
                     // Gọi hàm Send
-                    // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
-                   
+                        // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
+                        Send(clientFileInput, 1);
+                    }
+                } 
+                else // text trên lbPic là đường dẫn file hình mới chụp
+                {
+                    File captureFile = new File(lbPic.getText());
+                    clientFileInput = captureFile; 
+                    //JOptionPane.showMessageDialog(pnmenu, clientFileInput.getAbsolutePath());
                     Send(clientFileInput, 1);
                 }
 
@@ -509,8 +533,24 @@ public class ClientGui extends JFrame {
         f.setVisible(true);
     }
 
+    //hàm này gọi camera (class Camera)
     public void OpenCamera() {
-
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        EventQueue.invokeLater(new Runnable() {
+            // Overriding existing run() method
+            @Override
+            public void run() {
+                //final Camera camera = new Camera();
+                final Camera camera = new Camera();
+                // Start camera in thread
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        camera.startCamera();
+                    }
+                }).start();
+            }
+        });
     }
 
     public void Send(File file, int type) {
@@ -565,7 +605,8 @@ public class ClientGui extends JFrame {
         if (clientFileInput != null) {
             ImageIcon image = new ImageIcon(clientFileInput.getPath());
             lbPic.setIcon(image);
-            lbPic.setText("");
+            //lbPic.setText("");
+            lbPic.setText(null);
         }
     }
 

@@ -9,16 +9,15 @@ import java.awt.EventQueue;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -26,10 +25,12 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.videoio.VideoCapture;
+import static org.opencv.videoio.Videoio.CAP_DSHOW;
 
 /**
  *
@@ -52,6 +53,9 @@ public class Camera extends JFrame {
     private boolean clicked = false;
     //private static final String xml = "D:/test/test/src/OpenCV/lbpcascade_frontalface.xml";
     private static final String xml = "src/facecompare/lbpcascade_frontalface.xml";
+    public static String capturePath; //đường dẫn của file ảnh vừa chụp từ webcam
+    
+    
 
     public Camera() {
 
@@ -70,22 +74,38 @@ public class Camera extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                clicked = true;
+                clicked = true;               
             }
         });
 
+        this.addWindowListener(new java.awt.event.WindowAdapter() 
+        {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) 
+            {   
+                //do something
+                capture.release();
+            }
+        });
+        
         setSize(new Dimension(640, 560));
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setVisible(true);
     }
 
     // Creating a camera
     public void startCamera() {
-        capture = new VideoCapture(0);
+        //capture = new VideoCapture(0);
+        capture = new VideoCapture(0, CAP_DSHOW);
+        
         image = new Mat();
         byte[] imageData;
 
+         if (capture.isOpened())
+         {
+        //----------------------------
         ImageIcon icon;
         while (true) {
             // read image to matrix
@@ -140,9 +160,40 @@ public class Camera extends JFrame {
                     
                 }
             }
-           
+                     
+            //Khi chọn nút CAPTURE => clicked = true
+            if (clicked) {               
+                saveImage(); //tạo file ảnh
+                
+                ImageIcon image = new ImageIcon(capturePath);  
+                //gán hình vừa chụp vào biến static lbPic(clalss ClientGui)
+                ClientGui.lbPic.setIcon(image);
+                //gán đường dẫn hình vừa chụp vào text của lbPic
+                ClientGui.lbPic.setText(capturePath);              
+                capture.release(); //tắt webcam  
+                //HighGui.destroyAllWindows();
+                this.dispose();
+                //this.setVisible(false);
+                //this.dispose();
+                
+            }
         }
+        //--------
+         }
+         HighGui.destroyAllWindows();
     }
+    
+    private void saveImage() {        
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm_ss");
+                String name = dateFormat.format(new Date());
+                              
+                Path dirDesktop = Paths.get(System.getProperty("user.home"),"Desktop");               
+                // Hình lưu ở Desktop
+                Imgcodecs.imwrite(dirDesktop + "\\" + name + ".jpg", image); 
+                capturePath = dirDesktop + "\\" + name + ".jpg";              
+                clicked = false;
+   }
+
 
     // Main driver method
     public static void main(String[] args) {
@@ -159,7 +210,7 @@ public class Camera extends JFrame {
                     public void run() {
                         camera.startCamera();
                     }
-                }).start();
+                }).start();                
             }
         });
     }

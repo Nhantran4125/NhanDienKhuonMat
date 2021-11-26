@@ -127,39 +127,39 @@ public class Camera extends JFrame {
                 System.out.println(String.format("Detected %s faces",
                         faceDetections.toArray().length));
 
-                // Drawing boxes
-                for (Rect rect : faceDetections.toArray()) {
-                    System.out.println(rect.area());
-
-                    Imgproc.rectangle(
-                            image, // where to draw the box
-                            new Point(rect.x, rect.y), // bottom left
-                            new Point(rect.x + rect.width, rect.y + rect.height), // top right
-                            new Scalar(0, 0, 250),
-                            3 // RGB colour
-                    );
-                    Imgcodecs.imencode(".jpg", image, buf);
-
-                    Mat a = Imgcodecs.imread("Hello");
-                    imageData = buf.toArray();
-                    //  icon = new ImageIcon(imageData);
-                    icon = new ImageIcon(imageData);
-                    cameraScreen.setIcon(icon);
-
-                }
-                
-                for (Rect rect : faceDetections.toArray()) {
-                    System.out.println(rect.area());
-                   
-                    Imgproc.rectangle(
-                            image, // where to draw the box
-                            new Point(rect.x, rect.y), // bottom left
-                            new Point(rect.x + rect.width, rect.y + rect.height), // top right
-                            new Scalar(0, 0, 0),
-                            3 // RGB colour
-                    );
-                    
-                }
+//                // Drawing boxes
+//                for (Rect rect : faceDetections.toArray()) {
+//                    System.out.println(rect.area());
+//
+//                    Imgproc.rectangle(
+//                            image, // where to draw the box
+//                            new Point(rect.x, rect.y), // bottom left
+//                            new Point(rect.x + rect.width, rect.y + rect.height), // top right
+//                            new Scalar(0, 0, 250),
+//                            3 // RGB colour
+//                    );
+//                    Imgcodecs.imencode(".jpg", image, buf);
+//
+//                    Mat a = Imgcodecs.imread("Hello");
+//                    imageData = buf.toArray();
+//                    //  icon = new ImageIcon(imageData);
+//                    icon = new ImageIcon(imageData);
+//                    cameraScreen.setIcon(icon);
+//
+//                }
+//                
+//                for (Rect rect : faceDetections.toArray()) {
+//                    System.out.println(rect.area());
+//                   
+//                    Imgproc.rectangle(
+//                            image, // where to draw the box
+//                            new Point(rect.x, rect.y), // bottom left
+//                            new Point(rect.x + rect.width, rect.y + rect.height), // top right
+//                            new Scalar(0, 0, 0),
+//                            3 // RGB colour
+//                    );
+//                    
+//                }
             }
                      
             //Khi chọn nút CAPTURE => clicked = true

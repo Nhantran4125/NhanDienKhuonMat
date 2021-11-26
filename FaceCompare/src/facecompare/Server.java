@@ -58,50 +58,40 @@ public class Server {
     ObjectInputStream inputStream = null;
     public String line = "";
     ObjectOutput outputStream;
-    private SecretKey key ;
+    private SecretKey key;
 
     public Server(int port) {
         try {
-            server = new ServerSocket(SERVER_PORT);
+            server = new ServerSocket(port);
             while (true) {
                 try {
                     System.out.println("Server start");
                     socket = server.accept();
-                    System.out.println("Connected");
-                   
-                   
-                    if (key == null) {
-                        inputStream = new ObjectInputStream(socket.getInputStream());
-                         byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
-                        key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
-                       
-                        System.out.println(key);
-                    } 
+                    if (socket.isConnected()) {
+                        System.out.println("Client : " + socket.getInetAddress() + " connected ");
+                        if (key == null) {
+                            inputStream = new ObjectInputStream(socket.getInputStream());
+                            byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
+                            System.out.println(arrayKey);
+                            key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
+
+                            System.out.println(key);
+                        }
                         while (true) {
-                           inputStream = new ObjectInputStream(socket.getInputStream());
+                            inputStream = new ObjectInputStream(socket.getInputStream());
                             byte[] cypher = (byte[]) inputStream.readObject();
-//                            if (request.getType() == 1) {
-//                                System.out.println("Hello");
-//                                ComparePhoto(request.getData(), request.getKey());
-//                            }
                             ComparePhoto(cypher);
                         }
-                    
+                    }
+
                 } catch (Exception ex) {
+                    key = null;
                     System.out.println("Client : " + socket.getInetAddress() + " is disconnected " + ex);
                 }
+
             }
         } catch (IOException ex) {
             System.err.println("Không thể khởi tạo serversocket : " + ex);
-        }
-        try {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            socket.close();
-            server.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
@@ -112,7 +102,7 @@ public class Server {
 
     private void ComparePhoto(byte[] data) {
         try {
-          
+
             byte[] originalData = DescryptData(data);
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(originalData));
             File outputfile = new File("src/photo/temp.jpg");
@@ -158,24 +148,24 @@ public class Server {
                         personMatch = person;
                     }
                 }
-             
+
                 Response response = new Response();
                 response.setData(EncryptData(getBinary(personMatch)));
                 response.setPhoto(EncryptData(getBinary(matchPhoto)));
                 response.setMessage(String.valueOf(max));
                 outputStream.writeObject(response);
-               
+
             } else {
                 Response response = new Response();
                 response.setMessage("Không tìm thấy người này");
                 outputStream.writeObject(response);
             }
+            outputfile.delete();
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-  
     String url = "src/encryption/";
 
     public byte[] DescryptKey(byte[] key) {
@@ -183,13 +173,13 @@ public class Server {
             PrivateKey privateKey = RSA.getPrivateKey(url + "PrivateKey.txt");
             return RSA.decrypt(privateKey, key);
         } catch (Exception ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex);
         }
         return null;
     }
 
     public byte[] DescryptData(byte[] data) {
-    
+
         return AES.decrypt(key, data);
     }
 
@@ -215,7 +205,6 @@ public class Server {
 //        }
 //        return obj;
 //    }
-
     private static byte[] getBinary(Object obj) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;

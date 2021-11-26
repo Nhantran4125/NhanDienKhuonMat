@@ -99,6 +99,7 @@ public class Camera extends JFrame {
     public void startCamera() {
         //capture = new VideoCapture(0);
         capture = new VideoCapture(0, CAP_DSHOW);
+        //capture = new VideoCapture(1, CAP_DSHOW);
         
         image = new Mat();
         byte[] imageData;

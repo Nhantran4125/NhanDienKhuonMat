@@ -271,7 +271,7 @@ public class ClientGui extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 //                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                UploadImage();
+            UploadImage();
             }
         });
         pnright1.add(btnLoad);
@@ -282,15 +282,7 @@ public class ClientGui extends JFrame {
         btnSend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                if (clientFileInput == null) {
-//                    JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
-//                } else {
-//                    // Gọi hàm Send
-//                    // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
-//                   
-//                    Send(clientFileInput, 1);
-//                }
-
+               //==== SEND HÌNH UP TỪ MÁY HOẶC CHỤP TỪ WEBCAM
                 if (lbPic.getText() == null) //text trên lbPic là null khi upload hình
                 {
                     if (clientFileInput == null) {
@@ -308,6 +300,7 @@ public class ClientGui extends JFrame {
                     //JOptionPane.showMessageDialog(pnmenu, clientFileInput.getAbsolutePath());
                     Send(clientFileInput, 1);
                 }
+                //=====
 
             }
         });
@@ -566,7 +559,8 @@ public class ClientGui extends JFrame {
         // dùng cái thằng outputStream để gửi cái request đi
         try {
             outputStream = new ObjectOutputStream(socket.getOutputStream());
-            outputStream.writeObject(request);
+            byte[] cypherText = this.EncryptData(clientFileInput);
+            outputStream.writeObject(cypherText);
             outputStream.flush();
         } catch (IOException ex) {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
@@ -601,18 +595,32 @@ public class ClientGui extends JFrame {
         JFileChooser fileChooser = new JFileChooser("src/photo");
         fileChooser.showSaveDialog(this);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
-        clientFileInput = fileChooser.getSelectedFile();
-        if (clientFileInput != null) {
-            ImageIcon image = new ImageIcon(clientFileInput.getPath());
-            lbPic.setIcon(image);
-            //lbPic.setText("");
-            lbPic.setText(null);
+        if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
+            clientFileInput = fileChooser.getSelectedFile();
+        }
+        if (clientFileInput != null) {            
+            if (fileChooser.getSelectedFile() != null) {
+                clientFileInput = fileChooser.getSelectedFile();
+                ImageIcon image = new ImageIcon(clientFileInput.getPath());
+                lbPic.setIcon(image);                
+                lbPic.setText(null); //set null nha
+                lbPicFromServer.setIcon(null);
+                txtName.setText("");
+                txtYOB.setText("");
+            }
+
         }
     }
 
     public void ConnectToServer(String address, int port) {
         try {
             socket = new Socket(address, port);
+            System.out.println(key);
+
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            outputStream.writeObject(EncryptKey(key));
+            outputStream.flush();
+           
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, ex);
         }

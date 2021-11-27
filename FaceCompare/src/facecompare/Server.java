@@ -65,8 +65,9 @@ public class Server {
     private SecretKey key = null;
 
     public Server(int port) {
-        try {
+        try {               
             server = new ServerSocket(port);
+            
             while (true) {
                 try {
                     System.out.println("Server start");

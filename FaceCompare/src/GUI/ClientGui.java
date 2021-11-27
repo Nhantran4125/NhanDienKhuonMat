@@ -581,24 +581,27 @@ public class ClientGui extends JFrame {
         } catch (IOException ex) {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+            //Commit
         // dùng cái thằng inputstream đẻ đọc tự server về
         try {
             inputStream = new ObjectInputStream(socket.getInputStream());
-            response = (Response) inputStream.readObject();
-            if (response.getData() != null && response.getPhoto() != null) {
-                Person person = (Person) getObject(DescryptData(response.getData()));
-                Photo photo = (Photo) getObject(DescryptData(response.getPhoto()));
-                lbPicFromServer.setIcon(new ImageIcon(photo.getPath()));
+            response = (Response) getObject(this.DescryptData((byte[]) inputStream.readObject()));
+            if (response.getPerson() != null && response.getPhoto() != null) {
+                lbPicFromServer.setIcon(new ImageIcon(response.getPhoto().getPath()));
                 lbPicFromServer.setText("");
                 lbPercent.setBounds(150, 430, 250, 50);
                 lbPercent.setText(String.valueOf(response.getMessage()) + "%/ 100%");
-                txtName.setText(person.getHoten());
-                txtYOB.setText(String.valueOf(person.getNamsinh()));
+                txtName.setText(response.getPerson().getHoten());
+                txtYOB.setText(String.valueOf(response.getPerson().getNamsinh()));
+                StringBuilder builder = new StringBuilder();
+                builder.append("Path : ").append(response.getPhoto().getPath()).append("\n");
+                builder.append("Person : ").append(response.getPerson().getHoten());
+                JOptionPane.showMessageDialog(null, builder.toString());
             } else {
                 lbPercent.setBounds(150, 430, 120, 50);
                 lbPicFromServer.setIcon(null);
                 lbPicFromServer.setText("Picture server sends...");
+                lbPercent.setText(String.valueOf(response.getMessage()) + "%/ 100%");
                 JOptionPane.showMessageDialog(this, response.getMessage());
                 txtName.setText("");
                 txtYOB.setText("");
@@ -658,8 +661,8 @@ public class ClientGui extends JFrame {
     }
 
     // giải mã dùng khóa của AES
-    public byte[] DescryptData(byte[] data) {
-        return AES.decrypt(key, data);
+    public byte[] DescryptData(byte[] response) {
+        return AES.decrypt(key, response);
     }
 
       private static byte[] getBinary(Object obj) {
@@ -724,7 +727,7 @@ public class ClientGui extends JFrame {
         // read from server
         try {
             inputStream = new ObjectInputStream(socket.getInputStream());
-            response = (Response) inputStream.readObject();
+            response = (Response) getObject(this.DescryptData((byte[]) inputStream.readObject()));
             JOptionPane.showMessageDialog(this, response.getMessage());
 
         } catch (IOException | ClassNotFoundException ex) {

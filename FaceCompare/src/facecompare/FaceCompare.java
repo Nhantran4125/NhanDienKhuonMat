@@ -134,7 +134,7 @@ public class FaceCompare {
                 obos.writeBytes("Content-Disposition: form-data; name=\"" + fileEntry.getKey()
                         + "\"; filename=\"" + encode(" ") + "\"\r\n");
                 obos.writeBytes("\r\n");
-                obos.write(fileEntry.getValue());
+                 obos.write(fileEntry.getValue());
                 obos.writeBytes("\r\n");
             }
         }

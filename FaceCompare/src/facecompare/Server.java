@@ -73,6 +73,10 @@ public class Server {
                                 Person ps = request.getPerson();
                                 addPhoto(file, ps);
                             }
+                            if(type == 0) {
+                            File file = request.getFile();
+                            ObjDetection(file);
+                        }
                         }
                     }
                     if(!socket.isConnected()){
@@ -148,6 +152,19 @@ public class Server {
         }
     }
 
+    private void ObjDetection(File file) {
+        ObjectDetection objDetection = new ObjectDetection(file);
+        ArrayList<String> obj = new ArrayList<>();
+        try {
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            obj = objDetection.ObjDetection(file);
+            Response response = new Response(obj);
+            outputStream.writeObject(this.EncryptData(getBinary(response)));
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     String url = "src/encryption/";
 
     private byte[] DescryptKey(byte[] key) {

@@ -73,13 +73,13 @@ public class Server {
                                 Person ps = request.getPerson();
                                 addPhoto(file, ps);
                             }
-                            if(type == 0) {
-                            File file = request.getFile();
-                            ObjDetection(file);
-                        }
+                            if (type == 0) {
+                                File file = request.getFile();
+                                ObjDetection(file);
+                            }
                         }
                     }
-                    if(!socket.isConnected()){
+                    if (!socket.isConnected()) {
                         key = null;
                     }
                 } catch (Exception ex) {
@@ -164,7 +164,7 @@ public class Server {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     String url = "src/encryption/";
 
     private byte[] DescryptKey(byte[] key) {

@@ -10,6 +10,8 @@ import facecompare.Server;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Image;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -27,6 +29,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.SecretKey;
@@ -64,7 +67,7 @@ public class ClientGui extends JFrame {
     Color color_background = new Color(31, 73, 91);
     //================ OBJECT
     public JLabel lbPicOj, lbServer, lbPicFromServerOj, lbPercentOj, lbNameOj, lbOj;
-    public JButton btnAddOj, btnLoadOj, btnSendOj;
+    public JButton btnLoadOj, btnSendOj;
     public JPanel pnResultOj, pnInfoOj;
     public JTextField txtNameOj;
     public JTextPane txpNamOj;
@@ -497,7 +500,7 @@ public class ClientGui extends JFrame {
 
         lbPicOj = new JLabel("Add picture here", JLabel.CENTER);
         lbPicOj.setFont(new Font("Segoe UI", Font.BOLD, 25));
-        lbPicOj.setBounds(50, 160, 400, 450);
+        lbPicOj.setBounds(50, 160, 450, 450);
         lbPicOj.setBackground(Color.WHITE);
         lbPicOj.setOpaque(true);
         pnright2.add(lbPicOj);
@@ -505,22 +508,43 @@ public class ClientGui extends JFrame {
         btnLoadOj = new JButton("UPLOAD");
         btnLoadOj.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnLoadOj.setBounds(200, 650, 100, 50);
+        btnLoadOj.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                UploadImageObj();
 
+            }
+        });
         pnright2.add(btnLoadOj);
 
         btnSendOj = new JButton("SEND");
         btnSendOj.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btnSendOj.setBounds(470, 310, 100, 50);
+        btnSendOj.setBounds(525, 310, 100, 50);
+        btnSendOj.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //==== send hình up từ folder
+                if (lbPicOj.getText() == null) //text trên lbPicOj là null khi upload hình
+                {
+                    if (clientFileInput == null) {
+                        JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+                    } else {
+                        // Gọi hàm Send
+                        senObj(clientFileInput);
+                    }
+                }
+            }
+        });
         pnright2.add(btnSendOj);
 
         lbServer = new JLabel("Receive from server", JLabel.CENTER);
         lbServer.setFont(new Font("Segoe UI", Font.BOLD, 25));
-        lbServer.setBounds(600, 100, 300, 20);
+        lbServer.setBounds(620, 100, 300, 20);
         pnright2.add(lbServer);
 
         //ket qua server tra ve
         pnResultOj = new JPanel();
-        pnResultOj.setBounds(590, 140, 800, 500);
+        pnResultOj.setBounds(650, 140, 750, 500);
         pnResultOj.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         pnResultOj.setLayout(null);
         pnright2.add(pnResultOj);
@@ -532,7 +556,9 @@ public class ClientGui extends JFrame {
 
 
         txpNamOj = new JTextPane();
-        txpNamOj.setBounds(25, 70, 750, 400);
+        txpNamOj.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        txpNamOj.setBounds(25, 70, 700, 400);
+        txpNamOj.setMargin(new Insets(20, 20, 20, 20));
         txpNamOj.setEditable(false);
         pnResultOj.add(txpNamOj);
 
@@ -560,6 +586,61 @@ public class ClientGui extends JFrame {
         });
     }
 
+    public void senObj(File file){
+        Request request = null;
+        request = new Request(clientFileInput);
+        
+        // dùng cái outputStream để gửi request đi
+        try {
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            byte[] cypherText = this.EncryptData(request);
+            outputStream.writeObject(cypherText);
+            outputStream.flush();
+
+        } catch (IOException ex) {
+            Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        // dùng cái inputstream để đọc từ server về
+        try {
+            inputStream = new ObjectInputStream(socket.getInputStream());
+            response = (Response) getObject(this.DescryptData((byte[]) inputStream.readObject()));
+            ArrayList<String> obj = new ArrayList<>();
+            if (response.getObj() != null) {
+                obj = response.getObj();
+                String textName = "";
+                int i = 1;
+                for (String objName : obj) {
+                    textName += i+". " + objName + "\n";
+                    i++;
+                }
+                txpNamOj.setText(textName);
+            }
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void UploadImageObj() {
+        JFileChooser fileChooser = new JFileChooser("src/photo2");
+        fileChooser.showSaveDialog(this);
+        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg"));
+        if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
+            clientFileInput = fileChooser.getSelectedFile();
+        }
+        if (clientFileInput != null) {
+            if (fileChooser.getSelectedFile() != null) {
+                clientFileInput = fileChooser.getSelectedFile();
+                ImageIcon image = new ImageIcon(clientFileInput.getPath());
+                Image img = image.getImage().getScaledInstance(lbPicOj.getWidth(), lbPicOj.getHeight(), Image.SCALE_SMOOTH);
+                ImageIcon icon = new ImageIcon(img);
+                lbPicOj.setIcon(icon);
+                lbPicOj.setText(null);
+            }
+
+        }
+    }
+    
+    
     public void Send(File file, int type) {
         Request request = null;
         if (type == 1) {

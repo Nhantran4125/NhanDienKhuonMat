@@ -27,6 +27,10 @@ public class Request implements Serializable {
         this.person = person;
         this.file = file;
     }
+    
+    public Request(File file) {
+        this.file = file;
+    }
 
     public int getType() {
         return type;

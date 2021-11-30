@@ -92,7 +92,8 @@ public class FaceCompare {
             //System.out.println("Confidence: "+confidence);
             return confidence;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Khong tim thay nguoi nay");
+            //e.printStackTrace();
         }
         return 0;
     }
@@ -134,7 +135,7 @@ public class FaceCompare {
                 obos.writeBytes("Content-Disposition: form-data; name=\"" + fileEntry.getKey()
                         + "\"; filename=\"" + encode(" ") + "\"\r\n");
                 obos.writeBytes("\r\n");
-                obos.write(fileEntry.getValue());
+                 obos.write(fileEntry.getValue());
                 obos.writeBytes("\r\n");
             }
         }

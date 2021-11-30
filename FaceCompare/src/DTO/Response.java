@@ -11,24 +11,35 @@ import java.io.Serializable;
  * @author DELL
  */
 public class Response implements Serializable {
-    byte[] data;
-    byte[] photo;
 
-    public byte[] getPhoto() {
+    Person person;
+    Photo photo;
+    String message;
+
+    public Response(Person person, Photo photo, String message) {
+        this.person = person;
+        this.photo = photo;
+        this.message = message;
+    }
+
+    public Response(String message) {
+        this.message = message;
+    }
+
+    public Person getPerson() {
+        return person;
+    }
+
+    public void setPerson(Person person) {
+        this.person = person;
+    }
+
+    public Photo getPhoto() {
         return photo;
     }
 
-    public void setPhoto(byte[] photo) {
+    public void setPhoto(Photo photo) {
         this.photo = photo;
-    }
-    String message;
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
     }
 
     public String getMessage() {
@@ -38,5 +49,5 @@ public class Response implements Serializable {
     public void setMessage(String message) {
         this.message = message;
     }
-    
+
 }

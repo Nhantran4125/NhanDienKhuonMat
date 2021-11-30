@@ -601,7 +601,7 @@ public class ClientGui extends JFrame {
                 lbPercent.setBounds(150, 430, 120, 50);
                 lbPicFromServer.setIcon(null);
                 lbPicFromServer.setText("Picture server sends...");
-                lbPercent.setText(String.valueOf(response.getMessage()) + "%/ 100%");
+                lbPercent.setText( "...%/ 100%");
                 JOptionPane.showMessageDialog(this, response.getMessage());
                 txtName.setText("");
                 txtYOB.setText("");
@@ -628,6 +628,7 @@ public class ClientGui extends JFrame {
                 lbPicFromServer.setIcon(null);
                 txtName.setText("");
                 txtYOB.setText("");
+                 lbPercent.setText( "...%/ 100%");
             }
 
         }

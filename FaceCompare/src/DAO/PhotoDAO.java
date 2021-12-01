@@ -47,11 +47,11 @@ public class PhotoDAO {
         
         MySQLConnect connect = new MySQLConnect();
         try {
-            int count=0;
-            count= increaseId()+1;
+            //int count=0;
+            //count= increaseId()+1;
             
-            String qry = "insert into photo value(";
-            qry += count + ",";
+            String qry = "insert into photo(id_person,path) value(";
+            //qry += count + ",";
             qry += photo.getId_person() + ",'";
             qry += photo.getPath() + "')";
 

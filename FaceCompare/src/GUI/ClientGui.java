@@ -400,36 +400,42 @@ public class ClientGui extends JFrame {
             public void actionPerformed(ActionEvent e) {
   
                 int year = Calendar.getInstance().get(Calendar.YEAR);
-                if (clientFileInput == null) {
+                //if (clientFileInput == null) {
+                if (lbPic.getIcon() == null) {
                     JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
                 } else {
-
-                    if (isImage(clientFileInput) == false) {
-                        JOptionPane.showMessageDialog(null, "Invalid type of picture");
-                    } else {
                         if (txtNameAdd.getText().trim().isEmpty() || txtYOBAdd.getText().trim().isEmpty()) {
                             JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
                         } else {
                             try {
                                 if (Integer.parseInt(txtYOBAdd.getText()) > year || Integer.parseInt(txtYOBAdd.getText()) <= 0) {
                                     JOptionPane.showMessageDialog(null, "Invalid date of birth (YOB)");
-                                } else {
+                                } else { 
                                     if (lbPic.getText() == null || lbPic.getIcon() == null) {
 
                                         // gui thong tin cho server xu ly
                                         Person ps = new Person();
                                         ps.setHoten(txtNameAdd.getText());
                                         ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
-
-                                        Add(ps, clientFileInput, 2);
-                                    } else { // text trên lbPic là đường dẫn file hình mới chụp
+                                        
+                                        //kiem tra hinh
+                                        if(isImage(clientFileInput) == false)
+                                                JOptionPane.showMessageDialog(null, "Invalid type of picture");
+                                        else  
+                                                Add(ps, clientFileInput, 2);
+                                    } else { // text trên lbPic là đường dẫn file hình mới chụp 
                                         File captureFile = new File(lbPic.getText());
 
                                         clientFileInput = captureFile;
                                         Person ps = new Person();
                                         ps.setHoten(txtNameAdd.getText());
                                         ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
-                                        Add(ps, clientFileInput, 2);
+                                        
+                                        //kiem tra hinh
+                                        if(isImage(clientFileInput) == false)
+                                                JOptionPane.showMessageDialog(null, "Invalid type of picture");
+                                        else  
+                                            Add(ps, clientFileInput, 2);
 
                                     }
 
@@ -439,60 +445,9 @@ public class ClientGui extends JFrame {
                                 JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
                             }
                         }
-                    }
 
                 }
 
-               
-
-             /*   if (lbPic.getText()==null || lbPic.getIcon()==null) 
-                {
-                    if (clientFileInput == null) {
-                        JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
-                    } else {
-                        int year = Calendar.getInstance().get(Calendar.YEAR);
-                        
-                        if (txtNameAdd.getText().trim().isEmpty() || txtYOBAdd.getText().trim().isEmpty()) 
-                        {
-                            JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
-                        } else {
-                            if(Integer.parseInt(txtYOBAdd.getText()) > year || Integer.parseInt(txtYOBAdd.getText())<0)
-                            {
-                                JOptionPane.showMessageDialog(null, "Invalid date of birth (YOB)");
-                            }
-                            else{
-                                try 
-                                { 
-                                // gui thong tin cho server xu ly
-                                Person ps = new Person();
-                                ps.setHoten(txtNameAdd.getText());
-                                ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
-
-                                Add(ps, clientFileInput, 2);
-                                } catch (NumberFormatException e1) {
-                                    System.out.println("Sai kieu du lieu nhap");
-                                    JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
-                                }
-                            }
-                            
-
-                        }
-                    }
-                } else // text trên lbPic là đường dẫn file hình mới chụp
-                {
-                    File captureFile = new File(lbPic.getText());
-                    clientFileInput = captureFile;
-
-                    try {
-                        Person ps = new Person();
-                        ps.setHoten(txtNameAdd.getText());
-                        ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
-                        Add(ps, clientFileInput, 2);
-                    } catch (NumberFormatException e1) {
-                        System.out.println("Sai kieu du lieu nhap");
-                        JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
-                    }
-                }*/
 
             }
             
@@ -535,6 +490,12 @@ public class ClientGui extends JFrame {
                 txtYOBAdd.setVisible(true);
                 lbPic.setIcon(null);
                 lbPic.setText("Add picture here ");
+                
+                //xu ly ben form check
+                lbPicFromServer.setIcon(null);
+                lbPercent.setText("%/ 100%");
+                txtName.setText(null);
+                txtYOB.setText(null);
             }
 
             @Override
@@ -887,6 +848,7 @@ public class ClientGui extends JFrame {
             
         
     }
+    
      public boolean isImage(File file)
     {
         try {

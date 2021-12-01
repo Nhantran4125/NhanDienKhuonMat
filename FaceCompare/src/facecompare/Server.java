@@ -221,6 +221,9 @@ public class Server {
 
             ArrayList<Person> listPerson = new ArrayList<>();
             listPerson = PersonDAO.loadPerson();
+            
+            ArrayList<Photo> listPhoto = new ArrayList<>();
+            listPhoto = PhotoDAO.loadPhoto();
 
             //data send to Client
             outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -230,20 +233,41 @@ public class Server {
             String path = "src/photo/" + dic.getPath();
 
             int count = 0;
+            int qty=0;
             for (Person x : listPerson) {
                 if (x.getHoten().equalsIgnoreCase(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
-                    // neu thong tin nguoi da ton tai -> them hinh
-                    Photo pt1 = new Photo();
-                    pt1.setId_person(x.getId());
-                    pt1.setPath(path);
-
-                    PhotoDAO pt = new PhotoDAO();
-                    pt.add(pt1);
-                    Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+                    listPhoto = PhotoDAO.loadPhoto();
+                    for(Photo t: listPhoto){
+                        if(x.getId()== t.getId_person()){
+                            qty++;
+                        }
+                    }
+                    if(qty>=5){
+                         System.out.println("Chỉ đc thêm tối đa 5 ảnh cho 1 đối tượng");
+                         Response response = new Response("Chỉ đc thêm tối đa 5 ảnh cho 1 đối tượng");
+                        outputStream.writeObject(this.EncryptData(getBinary(response)));
+                        System.out.println(response);
+                        //break;
+                    }
                     
-                    Response response = new Response("Thêm hình thành công");
-                    outputStream.writeObject(this.EncryptData(getBinary(response)));
-                    System.out.println(response);
+                    else{ //them anh
+                        // neu thong tin nguoi da ton tai -> them hinh
+                        Photo pt1 = new Photo();
+                        pt1.setId_person(x.getId());
+                        pt1.setPath(path);
+
+                        PhotoDAO pt = new PhotoDAO();
+                        pt.add(pt1);
+                        Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+
+                        Response response = new Response("Thêm hình thành công");
+                        outputStream.writeObject(this.EncryptData(getBinary(response)));
+                        System.out.println(response);
+                    }
+                    
+                    
+                    
+                    
 
                 } else {
                     count++;

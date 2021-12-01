@@ -51,8 +51,7 @@ public class PersonDAO {
         int count=0;
         count= demSlNguoi() +1;
 
-            String qry = "insert into person value(";
-            qry += count + ",'";
+            String qry = "insert into person(hoten,namsinh) value('";
             qry += person.getHoten() + "',";
             qry += person.getNamsinh() + ")";
             

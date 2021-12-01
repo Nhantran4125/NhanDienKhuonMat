@@ -50,8 +50,7 @@ public class PhotoDAO {
             int count=0;
             count= increaseId()+1;
             
-            String qry = "insert into photo value(";
-            qry += count + ",";
+            String qry = "insert into photo(id_person, path) value(";
             qry += photo.getId_person() + ",'";
             qry += photo.getPath() + "')";
 

@@ -30,9 +30,12 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Calendar;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.SecretKey;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -44,7 +47,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileSystemView;
 import org.opencv.core.Core;
 
 /**
@@ -88,15 +93,12 @@ public class ClientGui extends JFrame {
     String url = "src/encryption/";
 
     public ClientGui() {
-        // tạo thể hiện của JFrame
         f = new JFrame();
         f.setTitle("IMAGE RECOGNITION");
-//        f.setSize(1800,800);
         f.setSize(1700, 800);
         f.setLocationRelativeTo(null);
         f.setDefaultCloseOperation(EXIT_ON_CLOSE);
         f.setLayout(null);
-//        f.setVisible(true);
 
     }
 
@@ -127,7 +129,6 @@ public class ClientGui extends JFrame {
         lbPerson.setBounds(0, 0, 200, 100);
         lbPerson.setForeground(Color.WHITE);
         lbPerson.setBackground(color_background);
-        //lbPerson.setBackground(Color.yellow);
         lbPerson.setOpaque(true);
         pnmenu.add(lbPerson);
         lbPerson.addMouseListener(new MouseListener() {
@@ -225,6 +226,8 @@ public class ClientGui extends JFrame {
                 lbAdd.setForeground(null);
                 lbAdd.setBackground(null);
                 pnAdd.setVisible(false);
+                lbPic.setIcon(null);
+                lbPic.setText("Add picture here ");
 
             }
 
@@ -391,47 +394,104 @@ public class ClientGui extends JFrame {
         btnSend2.setBounds(430, 220, 100, 50);
         btnSend2.setFont(new Font("Segoe UI", Font.BOLD, 13));
         pnAdd.add(btnSend2);
-        btnSend2. addActionListener(new ActionListener() {
+        btnSend2.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) 
-            {
-                if (lbPic.getText() == null){
-                        if (clientFileInput == null) 
-                    {
-                            JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
-                    } 
-                    else 
-                    {
-                        if(txtNameAdd.getText().equals("") || txtYOBAdd.getText().equals(""))
+            public void actionPerformed(ActionEvent e) {
+
+                int year = Calendar.getInstance().get(Calendar.YEAR);
+                if (clientFileInput == null) {
+                    JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+                } else {
+
+                    if (isImage(clientFileInput) == false) {
+                        JOptionPane.showMessageDialog(null, "Invalid type of picture");
+                    } else {
+                        if (txtNameAdd.getText().trim().isEmpty() || txtYOBAdd.getText().trim().isEmpty()) {
                             JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
-                        else
+                        } else {
+                            try {
+                                if (Integer.parseInt(txtYOBAdd.getText()) > year || Integer.parseInt(txtYOBAdd.getText()) <= 0) {
+                                    JOptionPane.showMessageDialog(null, "Invalid date of birth (YOB)");
+                                } else {
+                                    if (lbPic.getText() == null || lbPic.getIcon() == null) {
+
+                                        // gui thong tin cho server xu ly
+                                        Person ps = new Person();
+                                        ps.setHoten(txtNameAdd.getText());
+                                        ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+
+                                        Add(ps, clientFileInput, 2);
+                                    } else { // text trên lbPic là đường dẫn file hình mới chụp
+                                        File captureFile = new File(lbPic.getText());
+
+                                        clientFileInput = captureFile;
+                                        Person ps = new Person();
+                                        ps.setHoten(txtNameAdd.getText());
+                                        ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+                                        Add(ps, clientFileInput, 2);
+
+                                    }
+
+                                }
+                            } catch (NumberFormatException e1) {
+                                System.out.println("Sai kiểu dữ liệu nhập YOB");
+                                JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
+                            }
+                        }
+                    }
+
+                }
+
+                /*   if (lbPic.getText()==null || lbPic.getIcon()==null) 
+                {
+                    if (clientFileInput == null) {
+                        JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
+                    } else {
+                        int year = Calendar.getInstance().get(Calendar.YEAR);
+                        
+                        if (txtNameAdd.getText().trim().isEmpty() || txtYOBAdd.getText().trim().isEmpty()) 
+                        {
+                            JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
+                        } else {
+                            if(Integer.parseInt(txtYOBAdd.getText()) > year || Integer.parseInt(txtYOBAdd.getText())<0)
                             {
+                                JOptionPane.showMessageDialog(null, "Invalid date of birth (YOB)");
+                            }
+                            else{
+                                try 
+                                { 
                                 // gui thong tin cho server xu ly
-                                Person ps= new Person();                            
+                                Person ps = new Person();
                                 ps.setHoten(txtNameAdd.getText());
                                 ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
 
-                                Add(ps,clientFileInput,2);
+                                Add(ps, clientFileInput, 2);
+                                } catch (NumberFormatException e1) {
+                                    System.out.println("Sai kieu du lieu nhap");
+                                    JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
+                                }
                             }
+                            
+
+                        }
                     }
-                }
-                else // text trên lbPic là đường dẫn file hình mới chụp
+                } else // text trên lbPic là đường dẫn file hình mới chụp
                 {
                     File captureFile = new File(lbPic.getText());
                     clientFileInput = captureFile;
-                    //JOptionPane.showMessageDialog(pnmenu, clientFileInput.getAbsolutePath());
-                     Person ps= new Person();                            
-                     ps.setHoten(txtNameAdd.getText());
-                     ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
-                    Add(ps,clientFileInput,2);
-                }
-                
-                
-                
-                
-                
+
+                    try {
+                        Person ps = new Person();
+                        ps.setHoten(txtNameAdd.getText());
+                        ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+                        Add(ps, clientFileInput, 2);
+                    } catch (NumberFormatException e1) {
+                        System.out.println("Sai kieu du lieu nhap");
+                        JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
+                    }
+                }*/
             }
-            
+
         });
 
         lbNameAdd = new JLabel("Name: ", JLabel.CENTER);
@@ -468,7 +528,8 @@ public class ClientGui extends JFrame {
                 lbCheck.setBackground(null);
                 txtNameAdd.setVisible(true);
                 txtYOBAdd.setVisible(true);
-
+                lbPic.setIcon(null);
+                lbPic.setText("Add picture here ");
             }
 
             @Override
@@ -554,7 +615,6 @@ public class ClientGui extends JFrame {
         lbNameOj.setBounds(0, 5, 200, 50);
         pnResultOj.add(lbNameOj);
 
-
         txpNamOj = new JTextPane();
         txpNamOj.setFont(new Font("Segoe UI", Font.BOLD, 18));
         txpNamOj.setBounds(25, 70, 700, 400);
@@ -586,10 +646,10 @@ public class ClientGui extends JFrame {
         });
     }
 
-    public void senObj(File file){
+    public void senObj(File file) {
         Request request = null;
         request = new Request(clientFileInput);
-        
+
         // dùng cái outputStream để gửi request đi
         try {
             outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -610,7 +670,7 @@ public class ClientGui extends JFrame {
                 String textName = "";
                 int i = 1;
                 for (String objName : obj) {
-                    textName += i+". " + objName + "\n";
+                    textName += i + ". " + objName + "\n";
                     i++;
                 }
                 txpNamOj.setText(textName);
@@ -619,7 +679,7 @@ public class ClientGui extends JFrame {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void UploadImageObj() {
         JFileChooser fileChooser = new JFileChooser("src/photo2");
         fileChooser.showSaveDialog(this);
@@ -639,16 +699,11 @@ public class ClientGui extends JFrame {
 
         }
     }
-    
-    
+
     public void Send(File file, int type) {
         Request request = null;
         if (type == 1) {
             request = new Request(type, clientFileInput);
-
-        } else if (type == 2) {
-            Person person = new Person();
-            request = new Request(type, person, clientFileInput);
 
         }
 
@@ -662,7 +717,7 @@ public class ClientGui extends JFrame {
         } catch (IOException ex) {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
         }
-            //Commit
+        //Commit
         // dùng cái thằng inputstream đẻ đọc tự server về
         try {
             inputStream = new ObjectInputStream(socket.getInputStream());
@@ -682,7 +737,7 @@ public class ClientGui extends JFrame {
                 lbPercent.setBounds(150, 430, 120, 50);
                 lbPicFromServer.setIcon(null);
                 lbPicFromServer.setText("Picture server sends...");
-                lbPercent.setText( "...%/ 100%");
+                lbPercent.setText("...%/ 100%");
                 JOptionPane.showMessageDialog(this, response.getMessage());
                 txtName.setText("");
                 txtYOB.setText("");
@@ -695,7 +750,11 @@ public class ClientGui extends JFrame {
 
     public void UploadImage() {
         JFileChooser fileChooser = new JFileChooser("src/photo");
+        FileFilter imageFilter = new FileNameExtensionFilter(
+                "Image files", ImageIO.getReaderFileSuffixes());
+
         fileChooser.showSaveDialog(this);
+        fileChooser.setFileFilter(imageFilter);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
         if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
             clientFileInput = fileChooser.getSelectedFile();
@@ -709,7 +768,7 @@ public class ClientGui extends JFrame {
                 lbPicFromServer.setIcon(null);
                 txtName.setText("");
                 txtYOB.setText("");
-                 lbPercent.setText( "...%/ 100%");
+                lbPercent.setText("...%/ 100%");
             }
 
         }
@@ -747,7 +806,7 @@ public class ClientGui extends JFrame {
         return AES.decrypt(key, response);
     }
 
-      private static byte[] getBinary(Object obj) {
+    private static byte[] getBinary(Object obj) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 ObjectOutputStream out = new ObjectOutputStream(bos)) {
             out.writeObject(obj);
@@ -755,7 +814,7 @@ public class ClientGui extends JFrame {
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
-       return null;
+        return null;
     }
 
     //chuyển object từ byte[]
@@ -789,14 +848,14 @@ public class ClientGui extends JFrame {
         c.ConnectToServer("localhost", 5000);
         c.show();
     }
-    
-    public void Add(Person person,File file, int type) {
-         Request request = null;
-         request = new Request(type, person, clientFileInput);
-         
-         //send to server
-         try {
-             
+
+    public void Add(Person person, File file, int type) {
+        Request request = null;
+        request = new Request(type, person, clientFileInput);
+
+        //send to server
+        try {
+
             outputStream = new ObjectOutputStream(socket.getOutputStream());
             byte[] cypherText = this.EncryptData(request);
             outputStream.writeObject(cypherText);
@@ -811,11 +870,23 @@ public class ClientGui extends JFrame {
             inputStream = new ObjectInputStream(socket.getInputStream());
             response = (Response) getObject(this.DescryptData((byte[]) inputStream.readObject()));
             JOptionPane.showMessageDialog(this, response.getMessage());
+            txtNameAdd.setText(null);
+            txtYOBAdd.setText(null);
+            lbPic.setIcon(null);
+            lbPic.setText("Add picture here");
 
         } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ClientGui.class.getName()).log(Level.SEVERE, null, ex);
         }
-            
-        
+
     }
+
+    public boolean isImage(File file) {
+        try {
+            return ImageIO.read(file) != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

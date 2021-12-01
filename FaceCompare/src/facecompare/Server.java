@@ -26,8 +26,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.PrivateKey;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -120,12 +124,14 @@ public class Server {
             //lần lượt so sánh hình client gửi (input) với từng hình trong CSDL (fileCompare)
             for (Photo photo : listPhoto) {
                 File fileCompare = new File(photo.getPath()).getAbsoluteFile();
-                confidence = fc.compareFace(file, fileCompare); // so khớp 2 hình -> kết quả giống nhau
-                System.out.println(confidence);
-                if (confidence > max) // tìm được hình có độ giống nhau lớn hơn max  -> gán matchPhoto là p
-                {
-                    max = confidence;
-                    matchPhoto = photo;
+                if (fileCompare.exists()) {
+                    confidence = fc.compareFace(file, fileCompare); // so khớp 2 hình -> kết quả giống nhau
+                    System.out.println(confidence);
+                    if (confidence > max) // tìm được hình có độ giống nhau lớn hơn max  -> gán matchPhoto là p
+                    {
+                        max = confidence;
+                        matchPhoto = photo;
+                    }
                 }
             }
             long duration = System.currentTimeMillis() - startTime;
@@ -222,28 +228,49 @@ public class Server {
             ArrayList<Person> listPerson = new ArrayList<>();
             listPerson = PersonDAO.loadPerson();
 
+            ArrayList<Photo> listPhoto = new ArrayList<>();
+            listPhoto = PhotoDAO.loadPhoto();
+
             //data send to Client
             outputStream = new ObjectOutputStream(socket.getOutputStream());
 
-            //File directory = new File(file.getPath()).getAbsoluteFile();
-            // hiện tại là ảnh cần thêm phải có sẵn trong folder photo thì sau  khi thêm ảnh mới so sánh được
             File directory = new File(file.getPath());
             File dic = new File(directory.getName());
             String path = "src/photo/" + dic.getPath();
-
-            //String path = directory.getAbsolutePath();
+            FaceCompare fc = new FaceCompare();
+            double confidence = 0.0;
             int count = 0;
             for (Person x : listPerson) {
-                if (x.getHoten().equals(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
+                if (x.getHoten().equalsIgnoreCase(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
                     // neu thong tin nguoi da ton tai -> them hinh
                     Photo pt1 = new Photo();
                     pt1.setId_person(x.getId());
                     pt1.setPath(path);
+                    Response response = new Response("Thêm không thành công");
+                    List<Photo> photoTemp = listPhoto.stream().filter(item -> item.getId_person() == x.getId()).toList();
+                    System.out.println(photoTemp.isEmpty());
+                    if (photoTemp.toArray().length == 0) {
+                        PhotoDAO pt = new PhotoDAO();
+                        pt.add(pt1);
+                        Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+                        response = new Response("Thêm hình thành công");
+                    } else {
 
-                    PhotoDAO pt = new PhotoDAO();
-                    pt.add(pt1);
-                    Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
-                    Response response = new Response("Thêm hình thành công");
+                        for (Photo photo : photoTemp) {
+                            File fileCompare = new File(photo.getPath()).getAbsoluteFile();
+                            confidence = fc.compareFace(file, fileCompare); // so khớp 2 hình -> kết quả giống nhau
+                            if (confidence >= 96) {
+                                response = new Response("Hình này đã có trong csdl");
+                            } else {
+                                PhotoDAO pt = new PhotoDAO();
+                                pt.add(pt1);
+                                Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+                                response = new Response("Thêm hình thành công");
+                                break;
+                            }
+                        }
+                    }
+
                     outputStream.writeObject(this.EncryptData(getBinary(response)));
                     System.out.println(response);
 
@@ -261,7 +288,7 @@ public class Server {
                 //them anh cua nguoi do
                 listPerson = PersonDAO.loadPerson();
                 for (Person x : listPerson) {
-                    if (x.getHoten().equals(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
+                    if (x.getHoten().equalsIgnoreCase(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
                         // neu thong tin nguoi da ton tai -> them hinh
                         Photo pt1 = new Photo();
                         pt1.setId_person(x.getId());
@@ -270,6 +297,7 @@ public class Server {
                         PhotoDAO pt = new PhotoDAO();
                         pt.add(pt1);
                         Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+
                         Response response = new Response("Thêm hình thành công");
                         outputStream.writeObject(this.EncryptData(getBinary(response)));
                         System.out.println(response);

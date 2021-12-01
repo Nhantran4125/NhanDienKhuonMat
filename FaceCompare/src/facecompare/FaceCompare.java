@@ -92,7 +92,8 @@ public class FaceCompare {
             //System.out.println("Confidence: "+confidence);
             return confidence;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Khong tim thay nguoi nay");
+            //e.printStackTrace();
         }
         return 0;
     }

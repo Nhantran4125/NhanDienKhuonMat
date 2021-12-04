@@ -65,7 +65,6 @@ public class PhotoDAO {
     
     public int increaseId()
     {
-        
          try {
              int count=0;
              MySQLConnect connect = new MySQLConnect();
@@ -80,8 +79,6 @@ public class PhotoDAO {
          } catch (SQLException ex) {
              Logger.getLogger(PersonDAO.class.getName()).log(Level.SEVERE, null, ex);
          }
-         return 0;
-        
+         return 0;       
     }
-
 }

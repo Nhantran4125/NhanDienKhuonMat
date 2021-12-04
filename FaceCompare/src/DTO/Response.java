@@ -63,5 +63,4 @@ public class Response implements Serializable {
     public void setMessage(String message) {
         this.message = message;
     }
-
 }

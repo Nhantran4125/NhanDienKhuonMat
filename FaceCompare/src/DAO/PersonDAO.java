@@ -4,9 +4,7 @@
  * and open the template in the editor.
  */
 package DAO;
-
 import DTO.Person;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -63,26 +61,4 @@ public class PersonDAO {
             System.out.println(ex.toString());
         }
     }
-    
-    public int demSlNguoi()
-    {
-        
-         try {
-             int count=0;
-             MySQLConnect connect = new MySQLConnect();
-             String qry="select count(id) from person";
-             connect.st = connect.conn.createStatement();
-             connect.rs = connect.st.executeQuery(qry);
-             while(connect.rs.next())
-             {
-                 count = connect.rs.getInt(1);
-             }
-             return count;              
-         } catch (SQLException ex) {
-             Logger.getLogger(PersonDAO.class.getName()).log(Level.SEVERE, null, ex);
-         }
-         return 0;
-        
-    }
-
 }

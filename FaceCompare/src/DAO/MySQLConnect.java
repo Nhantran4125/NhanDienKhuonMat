@@ -30,12 +30,8 @@ public class MySQLConnect {
                 conn = DriverManager.getConnection(url, user, password);
                 System.out.println("Connected database successfully");
             }
-            catch(ClassNotFoundException e){
+            catch(ClassNotFoundException | SQLException e){
                 JOptionPane.showMessageDialog(null,e.toString());
-            }
-            catch(SQLException e){
-                
-                JOptionPane.showMessageDialog(null,e.toString());               
             }
         }
     }

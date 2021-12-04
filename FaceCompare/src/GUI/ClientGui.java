@@ -74,7 +74,7 @@ public class ClientGui extends JFrame {
     Socket socket;
     SecretKey key = AES.generateKey();
     PublicKey publicKey;
-    ObjectInputStream inputStream = null; 
+    ObjectInputStream inputStream = null;
     ObjectOutputStream outputStream = null;
     int type;
     Response response = null;
@@ -580,14 +580,14 @@ public class ClientGui extends JFrame {
     //hàm này gọi camera (class Camera)
     public void OpenCamera() {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        
+
         EventQueue.invokeLater(new Runnable() {
             // Overriding existing run() method
             @Override
             public void run() {
                 //final Camera camera = new Camera();
                 final Camera camera = new Camera();
-              
+
                 // Start camera in thread
                 new Thread(new Runnable() {
                     @Override
@@ -652,7 +652,7 @@ public class ClientGui extends JFrame {
     }
 
     public void Send(File file, int type) {
-        Request request =  new Request(type, clientFileInput);
+        Request request = new Request(type, clientFileInput);
         // dùng cái thằng outputStream để gửi cái request đi
         try {
             outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -708,13 +708,13 @@ public class ClientGui extends JFrame {
         if (clientFileInput != null) {
             if (fileChooser.getSelectedFile() != null) {
                 clientFileInput = fileChooser.getSelectedFile();
-                ImageIcon image = new ImageIcon(new ImageIcon(clientFileInput.getPath()).getImage().getScaledInstance(lbPic.getWidth(), lbPic.getHeight(),Image.SCALE_SMOOTH));
-                lbPic.setIcon(image);
+                ImageIcon image = new ImageIcon(clientFileInput.getPath());
+                Image img = image.getImage().getScaledInstance(lbPic.getWidth(), lbPic.getHeight(), Image.SCALE_SMOOTH);
+                ImageIcon icon = new ImageIcon(img);
+                lbPic.setIcon(icon);
                 lbPic.setText(null); //set null nha
                 lbPicFromServer.setIcon(null);
-                txtName.setText("");
-                txtYOB.setText("");
-                lbPercent.setText("...%/ 100%");
+
             }
         }
     }
@@ -728,22 +728,22 @@ public class ClientGui extends JFrame {
             outputStream.writeObject(EncryptKey(key));
             outputStream.flush();
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(null,"Không tìm thấy Server");
-            System.exit(0);  
+            JOptionPane.showMessageDialog(null, "Không tìm thấy Server");
+            System.exit(0);
         }
     }
 
     public void DisconnectToServer() {
         try {
-            if(inputStream!=null){
-                  inputStream.close();
+            if (inputStream != null) {
+                inputStream.close();
             }
-            if(outputStream!=null){
-                 outputStream.close();
+            if (outputStream != null) {
+                outputStream.close();
             }
-           if(socket!=null){
-               socket.close();
-           }
+            if (socket != null) {
+                socket.close();
+            }
         } catch (IOException ex) {
             System.out.println(ex);
         }
@@ -765,7 +765,7 @@ public class ClientGui extends JFrame {
             out.writeObject(obj);
             return bos.toByteArray();
         } catch (IOException ex) {
-            System.out.println("Không chuyển được sang Byte : "+ex);
+            System.out.println("Không chuyển được sang Byte : " + ex);
         }
         return null;
     }
@@ -776,7 +776,7 @@ public class ClientGui extends JFrame {
                 ObjectInputStream in = new ObjectInputStream(bis)) {
             return in.readObject();
         } catch (IOException | ClassNotFoundException ex) {
-            System.out.println("Không chuyển được sang Object : "+ex);
+            System.out.println("Không chuyển được sang Object : " + ex);
         }
         return null;
     }
@@ -809,7 +809,7 @@ public class ClientGui extends JFrame {
             outputStream.writeObject(cypherText);
             outputStream.flush();
         } catch (IOException ex) {
-            System.out.println("Lỗi Client dòng 813 : "+ex);
+            System.out.println("Lỗi Client dòng 813 : " + ex);
         }
         // read from server
         try {
@@ -822,7 +822,7 @@ public class ClientGui extends JFrame {
             lbPic.setText("Add picture here");
 
         } catch (IOException | ClassNotFoundException ex) {
-            System.out.println("Lỗi Client dòng 826 : "+ex);
+            System.out.println("Lỗi Client dòng 826 : " + ex);
         }
     }
 

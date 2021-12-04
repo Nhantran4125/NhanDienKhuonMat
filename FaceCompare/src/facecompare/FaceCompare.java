@@ -35,52 +35,15 @@ public class FaceCompare {
     }
     public double compareFace(File file1, File file2)
     {
-
-//        File file = new File("YOUR IMAGE PATH");
-//		byte[] buff = getBytesFromFile(file);
-//		String url = "https://api-us.faceplusplus.com/facepp/v3/detect";
-//        HashMap<String, String> map = new HashMap<>();
-//        HashMap<String, byte[]> byteMap = new HashMap<>();
-//        map.put("api_key", "YOUR API_KEY");
-//        map.put("api_secret", "YOUR API_SECRET");
-//        byteMap.put("image_file", buff);
-//        try{
-//            byte[] bacd = post(url, map, byteMap);
-//            String str = new String(bacd);
-//            System.out.println(str);
-//        }catch (Exception e) {
-//        	e.printStackTrace();
-//		}
-        // Create a new file object for the first file and get bytes from file
-       
-//        //File file1 = new File("E:\\University\\NAM4_HK1\\LTM\\Test\\pic\\leo1.jpg");                     
-//        File file1 = new File("src/photo/leo1.jpg").getAbsoluteFile();
-//        byte[] buff1 = getBytesFromFile(file1);
-//
-//        // Create a new file object for the second file and get bytes from file
-//        File file2 = new File("src/photo/leo3.jpg").getAbsoluteFile();
-//        byte[] buff2 = getBytesFromFile(file2);
-        
-        //File file1 = new File("E:\\University\\NAM4_HK1\\LTM\\Test\\pic\\leo1.jpg");                     
-        //File file1 = new File("src/photo/leo1.jpg").getAbsoluteFile();
         byte[] buff1 = getBytesFromFile(file2);
-
-        // Create a new file object for the second file and get bytes from file
-        //File file2 = new File("src/photo/leo3.jpg").getAbsoluteFile();
         byte[] buff2 = getBytesFromFile(file1);
-
-        // Data needed to use the Face++ Compare API
         String url = "https://api-us.faceplusplus.com/facepp/v3/compare";
         HashMap<String, String> map = new HashMap<>();
         HashMap<String, byte[]> byteMap = new HashMap<>();
         map.put("api_key", "dam4ZdTkSsZOUAiR4oQpP3DRnjEz1fcD");
         map.put("api_secret", "0MOCfpum1Lec06EMOzuJPOEa_EhM4Ttg");
-
         byteMap.put("image_file1", buff1);
         byteMap.put("image_file2", buff2);
-        //byteMap.put("image_file3", buff3);
-        
-
         try {
             // Connecting and retrieving the JSON results
             byte[] bacd = post(url, map, byteMap);
@@ -135,7 +98,7 @@ public class FaceCompare {
                 obos.writeBytes("Content-Disposition: form-data; name=\"" + fileEntry.getKey()
                         + "\"; filename=\"" + encode(" ") + "\"\r\n");
                 obos.writeBytes("\r\n");
-                 obos.write(fileEntry.getValue());
+                obos.write(fileEntry.getValue());
                 obos.writeBytes("\r\n");
             }
         }

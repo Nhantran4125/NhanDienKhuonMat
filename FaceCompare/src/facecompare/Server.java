@@ -31,7 +31,7 @@ public class Server implements Runnable{
     ObjectInputStream inputStream = null;
     ObjectOutputStream outputStream;
     private SecretKey key = null;
-    private int counter;
+    private final int counter;
 
     public Server(Socket socket, int counter) {
         this.socket = socket;
@@ -39,6 +39,7 @@ public class Server implements Runnable{
     }
 
 
+    @Override
     public void run() {
         try {
             System.out.println("Client  " + counter + " : " + socket.getInetAddress() + "is connected ");
@@ -46,7 +47,6 @@ public class Server implements Runnable{
                 if (key == null) {
                     inputStream = new ObjectInputStream(socket.getInputStream());
                     byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
-                    System.out.println(arrayKey.length);
                     key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
                 }
                 while (true) {

@@ -10,8 +10,6 @@ import DAO.PhotoDAO;
 import DTO.Person;
 import DTO.Photo;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.URL;
 import java.util.ArrayList;
 
 /**

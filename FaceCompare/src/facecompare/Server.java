@@ -8,18 +8,12 @@ import DTO.Request;
 import DTO.Response;
 import encryption.AES;
 import encryption.RSA;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -31,67 +25,58 @@ import java.util.logging.Logger;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-public class Server {
+public class Server implements Runnable{
 
     private Socket socket = null;
-    private ServerSocket server = null;
-    BufferedWriter out = null;
-    BufferedReader in = null;
-    DataInputStream input;
-    DataOutputStream output = null;
     ObjectInputStream inputStream = null;
-    public String line = "";
-    ObjectOutput outputStream;
+    ObjectOutputStream outputStream;
     private SecretKey key = null;
+    private int counter;
 
-    public Server(int port) {
-        try {
-            server = new ServerSocket(port);
-            while (true) {
-                try {
-                    System.out.println("Server start");
-                    socket = server.accept();
-                    System.out.println("Client : " + socket.getInetAddress() + " connected ");
-                    if (socket.isConnected()) {
-                        if (key == null) {
-                            inputStream = new ObjectInputStream(socket.getInputStream());
-                            byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
-                            System.out.println(arrayKey.length);
-                            key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
-                        }
-                        while (true) {
-                            inputStream = new ObjectInputStream(socket.getInputStream());
-                            byte[] cypher = (byte[]) inputStream.readObject();
-                            Request request = (Request) getObject(this.DescryptData(cypher));
-                            int type = request.getType();
-                            if (type == 1) {
-                                File file = request.getFile();
-                                ComparePhoto(file);
-                            }
-                            if (type == 2) {
-                                File file = request.getFile();
-                                Person ps = request.getPerson();
-                                addPhoto(file, ps);
-                            }
-                        }
-                    }
-                    if(!socket.isConnected()){
-                        key = null;
-                    }
-                } catch (Exception ex) {
-                    key = null;
-                    System.out.println("Client : " + socket.getInetAddress() + " is disconnected " + ex);
-                }
-
-            }
-        } catch (IOException ex) {
-            System.err.println("Không thể khởi tạo serversocket : " + ex);
-        }
-
+    public Server(Socket socket, int counter) {
+        this.socket = socket;
+        this.counter = counter;
     }
 
-    public static void main(String[] args) {
-        Server server1 = new Server(5000);
+
+    public void run() {
+        try {
+            System.out.println("Client  " + counter + " : " + socket.getInetAddress() + "is connected ");
+            if (socket.isConnected()) {
+                if (key == null) {
+                    inputStream = new ObjectInputStream(socket.getInputStream());
+                    byte[] arrayKey = DescryptKey((byte[]) inputStream.readObject());
+                    System.out.println(arrayKey.length);
+                    key = new SecretKeySpec(arrayKey, 0, arrayKey.length, "AES");
+                }
+                while (true) {
+                    inputStream = new ObjectInputStream(socket.getInputStream());
+                    byte[] cypher = (byte[]) inputStream.readObject();
+                    Request request = (Request) getObject(this.DescryptData(cypher));
+                    int type = request.getType();
+                    if (type == 1) {
+                        File file = request.getFile();
+                        ComparePhoto(file);
+                    }
+                    if (type == 2) {
+                        File file = request.getFile();
+                        Person ps = request.getPerson();
+                        addPhoto(file, ps);
+                    }
+                    if (type == 0) {
+                        File file = request.getFile();
+                        ObjDetection(file);
+                    }
+                }
+            }
+            if (!socket.isConnected()) {
+                key = null;
+            }
+        } catch (Exception ex) {
+            key = null;
+            System.out.println("Client : " + socket.getInetAddress() + " is disconnected " + ex);
+        }
+
     }
 
     private void ComparePhoto(File file) {
@@ -116,12 +101,14 @@ public class Server {
             //lần lượt so sánh hình client gửi (input) với từng hình trong CSDL (fileCompare)
             for (Photo photo : listPhoto) {
                 File fileCompare = new File(photo.getPath()).getAbsoluteFile();
-                confidence = fc.compareFace(file, fileCompare); // so khớp 2 hình -> kết quả giống nhau
-                System.out.println(confidence);
-                if (confidence > max) // tìm được hình có độ giống nhau lớn hơn max  -> gán matchPhoto là p
-                {
-                    max = confidence;
-                    matchPhoto = photo;
+                if (fileCompare.exists()) {
+                    confidence = fc.compareFace(file, fileCompare); // so khớp 2 hình -> kết quả giống nhau
+                    System.out.println(confidence);
+                    if (confidence > max) // tìm được hình có độ giống nhau lớn hơn max  -> gán matchPhoto là p
+                    {
+                        max = confidence;
+                        matchPhoto = photo;
+                    }
                 }
             }
             long duration = System.currentTimeMillis() - startTime;
@@ -143,6 +130,19 @@ public class Server {
             }
             outputStream.writeObject(this.EncryptData(getBinary(response)));
             outputStream.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void ObjDetection(File file) {
+        ObjectDetection objDetection = new ObjectDetection(file);
+        ArrayList<String> obj = new ArrayList<>();
+        try {
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            obj = objDetection.ObjDetection(file);
+            Response response = new Response(obj);
+            outputStream.writeObject(this.EncryptData(getBinary(response)));
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -205,6 +205,9 @@ public class Server {
             ArrayList<Person> listPerson = new ArrayList<>();
             listPerson = PersonDAO.loadPerson();
 
+            ArrayList<Photo> listPhoto = new ArrayList<>();
+            listPhoto = PhotoDAO.loadPhoto();
+
             //data send to Client
             outputStream = new ObjectOutputStream(socket.getOutputStream());
 
@@ -213,20 +216,35 @@ public class Server {
             String path = "src/photo/" + dic.getPath();
 
             int count = 0;
+            int qty = 0;
             for (Person x : listPerson) {
                 if (x.getHoten().equalsIgnoreCase(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
-                    // neu thong tin nguoi da ton tai -> them hinh
-                    Photo pt1 = new Photo();
-                    pt1.setId_person(x.getId());
-                    pt1.setPath(path);
+                    listPhoto = PhotoDAO.loadPhoto();
+                    for (Photo t : listPhoto) {
+                        if (x.getId() == t.getId_person()) {
+                            qty++;
+                        }
+                    }
+                    if (qty >= 5) {
+                        System.out.println("Chỉ đc thêm tối đa 5 ảnh cho 1 đối tượng");
+                        Response response = new Response("Chỉ đc thêm tối đa 5 ảnh cho 1 đối tượng");
+                        outputStream.writeObject(this.EncryptData(getBinary(response)));
+                        System.out.println(response);
+                        //break;
+                    } else { //them anh
+                        // neu thong tin nguoi da ton tai -> them hinh
+                        Photo pt1 = new Photo();
+                        pt1.setId_person(x.getId());
+                        pt1.setPath(path);
 
-                    PhotoDAO pt = new PhotoDAO();
-                    pt.add(pt1);
-                    Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
-                    
-                    Response response = new Response("Thêm hình thành công");
-                    outputStream.writeObject(this.EncryptData(getBinary(response)));
-                    System.out.println(response);
+                        PhotoDAO pt = new PhotoDAO();
+                        pt.add(pt1);
+                        Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+
+                        Response response = new Response("Thêm hình thành công");
+                        outputStream.writeObject(this.EncryptData(getBinary(response)));
+                        System.out.println(response);
+                    }
 
                 } else {
                     count++;
@@ -251,7 +269,7 @@ public class Server {
                         PhotoDAO pt = new PhotoDAO();
                         pt.add(pt1);
                         Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
-                        
+
                         Response response = new Response("Thêm hình thành công");
                         outputStream.writeObject(this.EncryptData(getBinary(response)));
                         System.out.println(response);
@@ -265,5 +283,4 @@ public class Server {
         }
 
     }
-
 }

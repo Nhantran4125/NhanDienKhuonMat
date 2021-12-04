@@ -47,6 +47,7 @@ public class Camera extends JFrame {
     // Start camera
     private VideoCapture capture = null;
 
+
     // Store image as 2D matrix
     private Mat image = null;
 
@@ -54,8 +55,6 @@ public class Camera extends JFrame {
     //private static final String xml = "D:/test/test/src/OpenCV/lbpcascade_frontalface.xml";
     private static final String xml = "src/facecompare/lbpcascade_frontalface.xml";
     public static String capturePath; //đường dẫn của file ảnh vừa chụp từ webcam
-    
-    
 
     public Camera() {
 
@@ -74,20 +73,18 @@ public class Camera extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                clicked = true;               
+                clicked = true;
             }
         });
 
-        this.addWindowListener(new java.awt.event.WindowAdapter() 
-        {
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
-            public void windowClosing(java.awt.event.WindowEvent windowEvent) 
-            {   
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
                 //do something
                 capture.release();
             }
         });
-        
+
         setSize(new Dimension(640, 560));
         setLocationRelativeTo(null);
         //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,101 +97,62 @@ public class Camera extends JFrame {
         //capture = new VideoCapture(0);
         capture = new VideoCapture(0, CAP_DSHOW);
         //capture = new VideoCapture(1, CAP_DSHOW);
-        
+
         image = new Mat();
         byte[] imageData;
 
-         if (capture.isOpened())
-         {
-        //----------------------------
-        ImageIcon icon;
-        while (true) {
-            // read image to matrix
-            if (capture.read(image)) {
-                CascadeClassifier classifier = new CascadeClassifier(xml);
-                // convert matrix to byte
-                final MatOfByte buf = new MatOfByte();
-                Imgcodecs.imencode(".jpg", image, buf);
+        if (capture.isOpened()) {
+            //----------------------------
+            ImageIcon icon;
+            while (true) {
+                // read image to matrix
+                if (capture.read(image)) {
+                    CascadeClassifier classifier = new CascadeClassifier(xml);
+                    // convert matrix to byte
+                    final MatOfByte buf = new MatOfByte();
+                    Imgcodecs.imencode(".jpg", image, buf);
 
-                imageData = buf.toArray();
-                MatOfRect faceDetections = new MatOfRect();
-                classifier.detectMultiScale(image, faceDetections);
-                // Add to JLabel
-                icon = new ImageIcon(imageData);
-                cameraScreen.setIcon(icon);
-                // Detecting the face in the snap
+                    imageData = buf.toArray();
+                    MatOfRect faceDetections = new MatOfRect();
+                    classifier.detectMultiScale(image, faceDetections);
+                    // Add to JLabel
+                    icon = new ImageIcon(imageData);
+                    cameraScreen.setIcon(icon);
+                    // Detecting the face in the snap
+                }
 
-                System.out.println(String.format("Detected %s faces",
-                        faceDetections.toArray().length));
+                //Khi chọn nút CAPTURE => clicked = true
+                if (clicked) {
+                    saveImage(); //tạo file ảnh
 
-//                // Drawing boxes
-//                for (Rect rect : faceDetections.toArray()) {
-//                    System.out.println(rect.area());
-//
-//                    Imgproc.rectangle(
-//                            image, // where to draw the box
-//                            new Point(rect.x, rect.y), // bottom left
-//                            new Point(rect.x + rect.width, rect.y + rect.height), // top right
-//                            new Scalar(0, 0, 250),
-//                            3 // RGB colour
-//                    );
-//                    Imgcodecs.imencode(".jpg", image, buf);
-//
-//                    Mat a = Imgcodecs.imread("Hello");
-//                    imageData = buf.toArray();
-//                    //  icon = new ImageIcon(imageData);
-//                    icon = new ImageIcon(imageData);
-//                    cameraScreen.setIcon(icon);
-//
-//                }
-//                
-//                for (Rect rect : faceDetections.toArray()) {
-//                    System.out.println(rect.area());
-//                   
-//                    Imgproc.rectangle(
-//                            image, // where to draw the box
-//                            new Point(rect.x, rect.y), // bottom left
-//                            new Point(rect.x + rect.width, rect.y + rect.height), // top right
-//                            new Scalar(0, 0, 0),
-//                            3 // RGB colour
-//                    );
-//                    
-//                }
+                    ImageIcon image = new ImageIcon(capturePath);
+                    //gán hình vừa chụp vào biến static lbPic(clalss ClientGui)
+                    ClientGui.lbPic.setIcon(image);
+                    //gán đường dẫn hình vừa chụp vào text của lbPic
+                    ClientGui.lbPic.setText(capturePath);
+                    capture.release(); //tắt webcam  
+                    //HighGui.destroyAllWindows();
+                    this.dispose();
+                    //this.setVisible(false);
+                    //this.dispose();
+
+                }
             }
-                     
-            //Khi chọn nút CAPTURE => clicked = true
-            if (clicked) {               
-                saveImage(); //tạo file ảnh
-                
-                ImageIcon image = new ImageIcon(capturePath);  
-                //gán hình vừa chụp vào biến static lbPic(clalss ClientGui)
-                ClientGui.lbPic.setIcon(image);
-                //gán đường dẫn hình vừa chụp vào text của lbPic
-                ClientGui.lbPic.setText(capturePath);              
-                capture.release(); //tắt webcam  
-                //HighGui.destroyAllWindows();
-                this.dispose();
-                //this.setVisible(false);
-                //this.dispose();
-                
-            }
+            //--------
         }
-        //--------
-         }
-         HighGui.destroyAllWindows();
+        HighGui.destroyAllWindows();
     }
-    
-    private void saveImage() {        
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm_ss");
-                String name = dateFormat.format(new Date());
-                              
-                Path dirDesktop = Paths.get(System.getProperty("user.home"),"Desktop");               
-                // Hình lưu ở Desktop
-                Imgcodecs.imwrite(dirDesktop + "\\" + name + ".jpg", image); 
-                capturePath = dirDesktop + "\\" + name + ".jpg";              
-                clicked = false;
-   }
 
+    private void saveImage() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HH_mm_ss");
+        String name = dateFormat.format(new Date());
+
+        Path dirDesktop = Paths.get(System.getProperty("user.home"), "Desktop");
+        // Hình lưu ở Desktop
+        Imgcodecs.imwrite(dirDesktop + "\\" + name + ".jpg", image);
+        capturePath = dirDesktop + "\\" + name + ".jpg";
+        clicked = false;
+    }
 
     // Main driver method
     public static void main(String[] args) {
@@ -206,12 +164,7 @@ public class Camera extends JFrame {
                 final Camera camera = new Camera();
 
                 // Start camera in thread
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        camera.startCamera();
-                    }
-                }).start();                
+                new Thread(camera::startCamera).start();
             }
         });
     }

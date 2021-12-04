@@ -1,7 +1,8 @@
 FaceCompare/opencv
+FaceCompare/yolo
 
 # NetBeans specific #
-FaceCompare/nbproject/
+FaceCompare/nbproject
 build/
 nbbuild/
 dist/

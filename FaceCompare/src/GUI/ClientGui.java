@@ -406,7 +406,6 @@ public class ClientGui extends JFrame {
                                     ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
 
                                     //kiem tra hinh
-
                                     if (isImage(clientFileInput) == false) {
                                         JOptionPane.showMessageDialog(null, "Invalid type of picture");
                                     } else {
@@ -414,7 +413,6 @@ public class ClientGui extends JFrame {
                                     }
                                 } else { // text trên lbPic là đường dẫn file hình mới chụp 
                                     File captureFile = new File(lbPic.getText());
-
 
                                     clientFileInput = captureFile;
                                     Person ps = new Person();
@@ -641,6 +639,7 @@ public class ClientGui extends JFrame {
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg"));
         if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
             clientFileInput = fileChooser.getSelectedFile();
+
         }
         if (clientFileInput != null) {
             if (fileChooser.getSelectedFile() != null) {
@@ -652,6 +651,7 @@ public class ClientGui extends JFrame {
                 lbPicOj.setText(null);
             }
         }
+
     }
 
     public void Send(File file, int type) {
@@ -712,12 +712,8 @@ public class ClientGui extends JFrame {
         fileChooser.setFileFilter(imageFilter);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp")); */
 
-        JFileChooser fileChooser = new JFileChooser("src/photo");
-        FileFilter imageFilter = new FileNameExtensionFilter(
-                "Image files", ImageIO.getReaderFileSuffixes());
-
+       JFileChooser fileChooser = new JFileChooser("src/photo");
         fileChooser.showSaveDialog(this);
-        fileChooser.setFileFilter(imageFilter);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
         
         if (clientFileInput == null && fileChooser.getSelectedFile() != null) {

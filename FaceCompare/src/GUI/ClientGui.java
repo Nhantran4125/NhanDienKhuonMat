@@ -305,11 +305,9 @@ public class ClientGui extends JFrame {
         lbTitlePic.setBounds(600, 100, 300, 20);
         pnright1.add(lbTitlePic);
 
-        //Border blackline = BorderFactory.createLineBorder(Color.black);
         pnResult = new JPanel();
         pnResult.setBounds(590, 140, 800, 500);
         pnResult.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        //pnResult.setBackground(color_background);
         pnResult.setLayout(null);
         pnResult.setVisible(true);
         pnright1.add(pnResult);
@@ -395,7 +393,9 @@ public class ClientGui extends JFrame {
                     } else {
                         try {
                             if (Integer.parseInt(txtYOBAdd.getText()) > year || Integer.parseInt(txtYOBAdd.getText()) <= 0) {
-                                JOptionPane.showMessageDialog(null, "Invalid date of birth (YOB)");
+
+                                JOptionPane.showMessageDialog(null, "Invalid year of birth (YOB)");
+
                             } else {
                                 if (lbPic.getText() == null || lbPic.getIcon() == null) {
 
@@ -638,17 +638,24 @@ public class ClientGui extends JFrame {
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg"));
         if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
             clientFileInput = fileChooser.getSelectedFile();
+
         }
         if (clientFileInput != null) {
             if (fileChooser.getSelectedFile() != null) {
                 clientFileInput = fileChooser.getSelectedFile();
-                ImageIcon image = new ImageIcon(clientFileInput.getPath());
-                Image img = image.getImage().getScaledInstance(lbPicOj.getWidth(), lbPicOj.getHeight(), Image.SCALE_SMOOTH);
-                ImageIcon icon = new ImageIcon(img);
-                lbPicOj.setIcon(icon);
-                lbPicOj.setText(null);
+                if (isImage(clientFileInput) == false) {
+                    JOptionPane.showMessageDialog(null, "Invalid type of picture");
+                } else {
+                    ImageIcon image = new ImageIcon(clientFileInput.getPath());
+                    Image img = image.getImage().getScaledInstance(lbPicOj.getWidth(), lbPicOj.getHeight(), Image.SCALE_SMOOTH);
+                    ImageIcon icon = new ImageIcon(img);
+                    lbPicOj.setIcon(icon);
+                    lbPicOj.setText(null);
+                }
+
             }
         }
+
     }
 
     public void Send(File file, int type) {
@@ -669,7 +676,12 @@ public class ClientGui extends JFrame {
             inputStream = new ObjectInputStream(socket.getInputStream());
             response = (Response) getObject(this.DescryptData((byte[]) inputStream.readObject()));
             if (response.getPerson() != null && response.getPhoto() != null) {
-                lbPicFromServer.setIcon(new ImageIcon(response.getPhoto().getPath()));
+
+                ImageIcon image = new ImageIcon(response.getPhoto().getPath());
+                Image img = image.getImage().getScaledInstance(lbPicFromServer.getWidth(), lbPicOj.getHeight(), Image.SCALE_SMOOTH);
+                ImageIcon icon = new ImageIcon(img);
+                lbPicFromServer.setIcon(icon);
+
                 lbPicFromServer.setText("");
                 lbPercent.setBounds(150, 430, 250, 50);
                 lbPercent.setText(String.valueOf(response.getMessage()) + "%/ 100%");
@@ -696,25 +708,25 @@ public class ClientGui extends JFrame {
 
     public void UploadImage() {
         JFileChooser fileChooser = new JFileChooser("src/photo");
-        FileFilter imageFilter = new FileNameExtensionFilter(
-                "Image files", ImageIO.getReaderFileSuffixes());
-
         fileChooser.showSaveDialog(this);
-        fileChooser.setFileFilter(imageFilter);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
+
         if (clientFileInput == null && fileChooser.getSelectedFile() != null) {
             clientFileInput = fileChooser.getSelectedFile();
         }
         if (clientFileInput != null) {
             if (fileChooser.getSelectedFile() != null) {
                 clientFileInput = fileChooser.getSelectedFile();
-                ImageIcon image = new ImageIcon(clientFileInput.getPath());
-                Image img = image.getImage().getScaledInstance(lbPic.getWidth(), lbPic.getHeight(), Image.SCALE_SMOOTH);
-                ImageIcon icon = new ImageIcon(img);
-                lbPic.setIcon(icon);
-                lbPic.setText(null); //set null nha
-                lbPicFromServer.setIcon(null);
-
+                if (isImage(clientFileInput) == false) {
+                    JOptionPane.showMessageDialog(null, "Invalid type of picture");
+                } else {
+                    ImageIcon image = new ImageIcon(clientFileInput.getPath());
+                    Image img = image.getImage().getScaledInstance(lbPic.getWidth(), lbPic.getHeight(), Image.SCALE_SMOOTH);
+                    ImageIcon icon = new ImageIcon(img);
+                    lbPic.setIcon(icon);
+                    lbPic.setText(null); //set null nha
+                    lbPicFromServer.setIcon(null);
+                }
             }
         }
     }
@@ -829,7 +841,7 @@ public class ClientGui extends JFrame {
     public boolean isImage(File file) {
         try {
             return ImageIO.read(file) != null;
-        } catch (Exception e) {
+        } catch (IOException e) {
             return false;
         }
     }

@@ -1,15 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package facecompare;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -22,19 +16,13 @@ import java.util.Random;
 import javax.net.ssl.SSLException;
 import org.json.JSONObject;
 
-/**
- *
- * @author user
- */
 public class FaceCompare {
 
-   //public static void main(String[] args) throws Exception {
-    public FaceCompare()
-    {
-        
+    public FaceCompare() {
+
     }
-    public double compareFace(File file1, File file2)
-    {
+
+    public double compareFace(File file1, File file2) {
         byte[] buff1 = getBytesFromFile(file2);
         byte[] buff2 = getBytesFromFile(file1);
         String url = "https://api-us.faceplusplus.com/facepp/v3/compare";
@@ -45,18 +33,13 @@ public class FaceCompare {
         byteMap.put("image_file1", buff1);
         byteMap.put("image_file2", buff2);
         try {
-            // Connecting and retrieving the JSON results
             byte[] bacd = post(url, map, byteMap);
             String jsonStr = new String(bacd);
-
-             
             JSONObject obj = new JSONObject(jsonStr);
             double confidence = obj.getDouble("confidence");
-            //System.out.println("Confidence: "+confidence);
             return confidence;
         } catch (Exception e) {
             System.out.println("Khong tim thay nguoi nay");
-            //e.printStackTrace();
         }
         return 0;
     }
@@ -115,7 +98,7 @@ public class FaceCompare {
                 ins = conne.getErrorStream();
             }
         } catch (SSLException e) {
-            e.printStackTrace();
+            System.out.println("Lỗi : " + e);
             return new byte[0];
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -161,5 +144,5 @@ public class FaceCompare {
         }
         return null;
     }
-    
+
 }

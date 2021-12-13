@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.crypto.SecretKey;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -277,7 +278,7 @@ public class ClientGui extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //==== SEND HÌNH UP TỪ MÁY HOẶC CHỤP TỪ WEBCAM
-               
+
                 if (lbPic.getText() == null) //text trên lbPic là null khi upload hình
                 {
                     // Gọi hàm Send
@@ -290,7 +291,7 @@ public class ClientGui extends JFrame {
                     //JOptionPane.showMessageDialog(pnmenu, clientFileInput.getAbsolutePath());
                     Send(clientFileInput, 1);
                 }
-                 if (clientFileInput == null) {
+                if (clientFileInput == null) {
                     JOptionPane.showMessageDialog(null, "Hãy chọn hình ảnh");
                 }
             }
@@ -389,44 +390,49 @@ public class ClientGui extends JFrame {
                     if (txtNameAdd.getText().trim().isEmpty() || txtYOBAdd.getText().trim().isEmpty()) {
                         JOptionPane.showMessageDialog(null, "Thong tin khong duoc bo trong");
                     } else {
-                        try {
-                            if (Integer.parseInt(txtYOBAdd.getText()) > year || Integer.parseInt(txtYOBAdd.getText()) <= 0) {
-
-                                JOptionPane.showMessageDialog(null, "Invalid year of birth (YOB)");
-
+                        //String pattern = "^[^!@#$?<>.*:;,/\\-+=()\\d]{1,}$";
+                        String pattern = "^[^!@#$?<>.*:;,/\\-+=()]{1,}$";
+                        if (!Pattern.matches(pattern, txtNameAdd.getText())) {
+                            JOptionPane.showMessageDialog(null, "Tên không hợp lệ");
+                        } else {
+                            if (txtNameAdd.getText().length() > 50) {
+                                JOptionPane.showMessageDialog(null, "Độ dài tên không hợp lệ");
                             } else {
-                                if (lbPic.getText() == null || lbPic.getIcon() == null) {
+                                try {
+                                    if (Integer.parseInt(txtYOBAdd.getText()) > year || Integer.parseInt(txtYOBAdd.getText()) <= 0) {
 
-                                    // gui thong tin cho server xu ly
-                                    Person ps = new Person();
-                                    ps.setHoten(txtNameAdd.getText());
-                                    ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+                                        JOptionPane.showMessageDialog(null, "Invalid year of birth (YOB)");
 
-                                    //kiem tra hinh
-                                    if (isImage(clientFileInput) == false) {
-                                        JOptionPane.showMessageDialog(null, "Invalid type of picture");
                                     } else {
-                                        Add(ps, clientFileInput, 2);
-                                    }
-                                } else { // text trên lbPic là đường dẫn file hình mới chụp 
-                                    File captureFile = new File(lbPic.getText());
+                                        if (lbPic.getText() == null || lbPic.getIcon() == null) {
 
-                                    clientFileInput = captureFile;
-                                    Person ps = new Person();
-                                    ps.setHoten(txtNameAdd.getText());
-                                    ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+                                            // gui thong tin cho server xu ly
+                                            Person ps = new Person();
+                                            ps.setHoten(txtNameAdd.getText());
+                                            ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
 
-                                    //kiem tra hinh
-                                    if (isImage(clientFileInput) == false) {
-                                        JOptionPane.showMessageDialog(null, "Invalid type of picture");
-                                    } else {
-                                        Add(ps, clientFileInput, 2);
+                                            //kiem tra hinh
+                                            if (isImage(clientFileInput) == false) {
+                                                JOptionPane.showMessageDialog(null, "Invalid type of picture");
+                                            } else {
+                                                Add(ps, clientFileInput, 2);
+                                            }
+                                        } else { // text trên lbPic là đường dẫn file hình mới chụp 
+                                            File captureFile = new File(lbPic.getText());
+
+                                            clientFileInput = captureFile;
+                                            Person ps = new Person();
+                                            ps.setHoten(txtNameAdd.getText());
+                                            ps.setNamsinh(Integer.parseInt(txtYOBAdd.getText()));
+                                            Add(ps, clientFileInput, 2);
+
+                                        }
                                     }
+                                } catch (NumberFormatException e1) {
+                                    System.out.println("Sai kiểu dữ liệu nhập YOB");
+                                    JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
                                 }
                             }
-                        } catch (NumberFormatException e1) {
-                            System.out.println("Sai kiểu dữ liệu nhập YOB");
-                            JOptionPane.showMessageDialog(null, "Sai kiểu dữ liệu nhập ở trường YOB");
                         }
                     }
                 }
@@ -685,7 +691,7 @@ public class ClientGui extends JFrame {
                 lbPercent.setText(String.valueOf(response.getMessage()) + "%/ 100%");
                 txtName.setText(response.getPerson().getHoten());
                 txtYOB.setText(String.valueOf(response.getPerson().getNamsinh()));
-                
+
             } else {
                 lbPercent.setBounds(150, 430, 120, 50);
                 lbPicFromServer.setIcon(null);

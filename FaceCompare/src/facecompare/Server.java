@@ -249,7 +249,7 @@ public class Server implements Runnable {
                                 }
                             }
                         }
-                        if (flag == true) {
+                        if (flag == false) {
                             Photo pt1 = new Photo();
                             pt1.setId_person(x.getId());
                             pt1.setPath(path);

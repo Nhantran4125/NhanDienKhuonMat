@@ -20,12 +20,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.PrivateKey;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-public class Server implements Runnable{
+public class Server implements Runnable {
 
     private Socket socket = null;
     ObjectInputStream inputStream = null;
@@ -37,7 +38,6 @@ public class Server implements Runnable{
         this.socket = socket;
         this.counter = counter;
     }
-
 
     @Override
     public void run() {
@@ -219,7 +219,6 @@ public class Server implements Runnable{
             int qty = 0;
             for (Person x : listPerson) {
                 if (x.getHoten().equalsIgnoreCase(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
-                    listPhoto = PhotoDAO.loadPhoto();
                     for (Photo t : listPhoto) {
                         if (x.getId() == t.getId_person()) {
                             qty++;
@@ -232,18 +231,37 @@ public class Server implements Runnable{
                         System.out.println(response);
                         //break;
                     } else { //them anh
+                        FaceCompare fc = new FaceCompare();
                         // neu thong tin nguoi da ton tai -> them hinh
-                        Photo pt1 = new Photo();
-                        pt1.setId_person(x.getId());
-                        pt1.setPath(path);
+                        boolean flag = false;
+                        List<Photo> checkArray = listPhoto.stream().filter(item -> item.getId_person() == x.getId()).toList();
+                        for (Photo photo : checkArray) {
+                            flag = false;
+                            File fileCompare = new File(photo.getPath()).getAbsoluteFile();
+                            double confidence = 0;
+                            if (fileCompare.exists()) {
+                                confidence = fc.compareFace(file, fileCompare); // so khớp 2 hình -> kết quả giống nhau
+                                if (confidence > 95) {
+                                    Response response = new Response("Hình này đã có trong cơ sở dữ liệu");
+                                    outputStream.writeObject(this.EncryptData(getBinary(response)));
+                                    flag = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (flag == true) {
+                            Photo pt1 = new Photo();
+                            pt1.setId_person(x.getId());
+                            pt1.setPath(path);
+                            PhotoDAO pt = new PhotoDAO();
+                            pt.add(pt1);
+                            Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
 
-                        PhotoDAO pt = new PhotoDAO();
-                        pt.add(pt1);
-                        Files.copy(Paths.get(file.getPath()), Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+                            Response response = new Response("Thêm hình thành công");
+                            outputStream.writeObject(this.EncryptData(getBinary(response)));
+                            System.out.println(response);
+                        }
 
-                        Response response = new Response("Thêm hình thành công");
-                        outputStream.writeObject(this.EncryptData(getBinary(response)));
-                        System.out.println(response);
                     }
 
                 } else {
@@ -260,7 +278,7 @@ public class Server implements Runnable{
                 //them anh cua nguoi do
                 listPerson = PersonDAO.loadPerson();
                 for (Person x : listPerson) {
-                    if (x.getHoten().equals(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
+                    if (x.getHoten().equalsIgnoreCase(ps.getHoten()) && x.getNamsinh() == ps.getNamsinh()) {
                         // neu thong tin nguoi da ton tai -> them hinh
                         Photo pt1 = new Photo();
                         pt1.setId_person(x.getId());

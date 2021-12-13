@@ -277,15 +277,12 @@ public class ClientGui extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //==== SEND HÌNH UP TỪ MÁY HOẶC CHỤP TỪ WEBCAM
+               
                 if (lbPic.getText() == null) //text trên lbPic là null khi upload hình
                 {
-                    if (clientFileInput == null) {
-                        JOptionPane.showMessageDialog(null, "Hay chon hinh anh");
-                    } else {
-                        // Gọi hàm Send
-                        // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
-                        Send(clientFileInput, 1);
-                    }
+                    // Gọi hàm Send
+                    // Thêm cái số 1 là gửi về Server để server biết phải làm cái gì
+                    Send(clientFileInput, 1);
                 } else // text trên lbPic là đường dẫn file hình mới chụp
                 {
                     File captureFile = new File(lbPic.getText());
@@ -293,8 +290,9 @@ public class ClientGui extends JFrame {
                     //JOptionPane.showMessageDialog(pnmenu, clientFileInput.getAbsolutePath());
                     Send(clientFileInput, 1);
                 }
-                //=====
-
+                 if (clientFileInput == null) {
+                    JOptionPane.showMessageDialog(null, "Hãy chọn hình ảnh");
+                }
             }
         });
         pnright1.add(btnSend);
@@ -687,10 +685,7 @@ public class ClientGui extends JFrame {
                 lbPercent.setText(String.valueOf(response.getMessage()) + "%/ 100%");
                 txtName.setText(response.getPerson().getHoten());
                 txtYOB.setText(String.valueOf(response.getPerson().getNamsinh()));
-                StringBuilder builder = new StringBuilder();
-                builder.append("Path : ").append(response.getPhoto().getPath()).append("\n");
-                builder.append("Person : ").append(response.getPerson().getHoten());
-                JOptionPane.showMessageDialog(null, builder.toString());
+                
             } else {
                 lbPercent.setBounds(150, 430, 120, 50);
                 lbPicFromServer.setIcon(null);
